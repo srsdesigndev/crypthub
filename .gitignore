@@ -51,4 +51,5 @@ yarn.lock
 
 # ── Native module build artifacts ────────────────────────────────
 build/Release/
-*.node
+*.nodeapp/
+dist/
