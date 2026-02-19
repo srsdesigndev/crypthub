@@ -5,6 +5,7 @@ node_modules/
 dist/
 out/
 build/
+release/
 
 # ── User data (NEVER commit — contains encrypted vault) ────────
 *.db

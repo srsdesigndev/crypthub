@@ -54,6 +54,21 @@ This means the export file can only be decrypted by someone who knows the origin
 
 ---
 
+## Download
+
+No coding required. Just download and run.
+
+| Platform | Download |
+|---|---|
+| macOS (Apple Silicon) | [CryptHub-1.0.0-arm64.dmg](https://github.com/srsdesigndev/crypthub/releases/latest) |
+| macOS (Intel) | [CryptHub-1.0.0-x64.dmg](https://github.com/srsdesigndev/crypthub/releases/latest) |
+| Windows | [CryptHub-Setup-1.0.0.exe](https://github.com/srsdesigndev/crypthub/releases/latest) |
+| Linux | [CryptHub-1.0.0.AppImage](https://github.com/srsdesigndev/crypthub/releases/latest) |
+
+> All release binaries are attached to the [Releases](https://github.com/srsdesigndev/crypthub/releases) page.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
