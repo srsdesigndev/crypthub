@@ -1,3 +1,10 @@
+![alt text](<assets/auth-crypthub.png>)
+![alt text](<assets/dashboard-crypthub.png>)
+![alt text](<assets/add-entry-crypthub.png>)
+
+
+
+
 # CryptHub
 
 > A local-first, encrypted password manager built with Electron & SQLite. Your vault never leaves your machine.
