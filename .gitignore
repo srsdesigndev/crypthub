@@ -1,0 +1,53 @@
+# ── Dependencies ───────────────────────────────────────────────
+node_modules/
+
+# ── Electron build output ───────────────────────────────────────
+dist/
+out/
+build/
+
+# ── User data (NEVER commit — contains encrypted vault) ────────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.crypthub
+
+# ── OS files ────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editor / IDE ────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.eslintcache
+
+# ── Logs ────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Environment & secrets ────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Package manager ──────────────────────────────────────────────
+package-lock.json
+yarn.lock
+.npm/
+
+# ── Native module build artifacts ────────────────────────────────
+build/Release/
+*.node

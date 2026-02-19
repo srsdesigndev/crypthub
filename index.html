@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CryptHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0d0d0f;
+    --surface:   #131316;
+    --border:    #1e1e24;
+    --border2:   #2a2a34;
+    --accent:    #00e5a0;
+    --accent2:   #00b87a;
+    --danger:    #ff4a6e;
+    --warn:      #f5a623;
+    --text:      #e8e8f0;
+    --muted:     #5a5a72;
+    --muted2:    #3a3a4a;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-ui:   'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-app-region: drag;
+  }
+
+  button, input, select, textarea {
+    -webkit-app-region: no-drag;
+    font-family: var(--font-mono);
+  }
+
+  /* ── LOCK SCREEN ───────────────────────────────────────── */
+  #lock-screen {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    z-index: 100;
+    animation: fadeIn .4s ease;
+  }
+  #lock-screen.hidden { display: none; }
+
+  .lock-card {
+    width: 380px;
+    padding: 48px 40px;
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    background: var(--surface);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .lock-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .lock-logo {
+    font-family: var(--font-ui);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+  .lock-logo span { color: var(--accent); }
+
+  .lock-subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .lock-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .lock-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 15px;
+    letter-spacing: 3px;
+    outline: none;
+    transition: border-color .2s;
+    -webkit-app-region: no-drag;
+  }
+  .lock-input:focus { border-color: var(--accent); }
+
+  .lock-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .lock-btn:hover { opacity: .9; }
+  .lock-btn:active { transform: scale(.98); }
+
+  .lock-error {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--danger);
+    min-height: 18px;
+  }
+
+  /* ── MAIN APP ───────────────────────────────────────────── */
+  #app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 52px 1fr;
+    height: 100vh;
+  }
+  #app.hidden { display: none; }
+
+  /* ── TITLEBAR ─────────────────────────────────────────── */
+  #titlebar {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    -webkit-app-region: drag;
+    padding-left: 80px; /* space for traffic lights */
+  }
+
+  .titlebar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    -webkit-app-region: no-drag;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: color .2s, background .2s;
+    font-size: 18px;
+  }
+  .icon-btn:hover { color: var(--text); background: var(--border); }
+
+  /* ── SIDEBAR LOGO ─────────────────────────────────────── */
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo-text {
+    font-family: var(--font-ui);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .sidebar-logo-text em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  /* ── SIDEBAR ──────────────────────────────────────────── */
+  #sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .search-wrap svg { color: var(--muted); flex-shrink: 0; }
+
+  #search-input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    width: 100%;
+  }
+  #search-input::placeholder { color: var(--muted); }
+
+  .sidebar-cats {
+    padding: 12px 8px 8px;
+  }
+  .cat-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .cat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    transition: background .15s, color .15s;
+    -webkit-app-region: no-drag;
+  }
+  .cat-item:hover { background: var(--border); color: var(--text); }
+  .cat-item.active { background: rgba(0,229,160,.1); color: var(--accent); }
+  .cat-item .cat-count {
+    margin-left: auto;
+    font-size: 10px;
+    background: var(--border2);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .cat-item.active .cat-count {
+    background: rgba(0,229,160,.2);
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .add-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity .2s;
+    -webkit-app-region: no-drag;
+  }
+  .add-btn:hover { opacity: .85; }
+
+  /* ── MAIN CONTENT ─────────────────────────────────────── */
+  #main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .main-header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .main-title {
+    font-family: var(--font-ui);
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .entry-count {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  #entry-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+
+  #entry-list::-webkit-scrollbar { width: 4px; }
+  #entry-list::-webkit-scrollbar-track { background: transparent; }
+  #entry-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: border-color .2s, transform .15s;
+    position: relative;
+    overflow: hidden;
+    -webkit-app-region: no-drag;
+  }
+  .entry-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .entry-card.selected { border-color: var(--accent); }
+  .entry-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,160,.3), transparent);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .entry-card:hover::after, .entry-card.selected::after { opacity: 1; }
+
+  .card-cat {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  .card-label {
+    font-family: var(--font-ui);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-user {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 14px;
+    min-height: 16px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .card-action {
+    flex: 1;
+    padding: 7px;
+    background: var(--border);
+    border: none;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .card-action:hover { background: var(--border2); color: var(--text); }
+  .card-action.copy-ok { color: var(--accent); }
+  .card-action.danger:hover { background: rgba(255,74,110,.15); color: var(--danger); }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    color: var(--muted);
+    gap: 16px;
+  }
+  .empty-state svg { opacity: .3; }
+  .empty-state p { font-size: 13px; letter-spacing: 1px; }
+
+  /* ── MODAL ────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn .2s ease;
+    -webkit-app-region: no-drag;
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+    position: relative;
+  }
+
+  .modal-title {
+    font-family: var(--font-ui);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color .15s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    font-family: var(--font-mono);
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-select { appearance: none; cursor: pointer; }
+
+  .pwd-row {
+    display: flex;
+    gap: 8px;
+  }
+  .pwd-row .form-input { flex: 1; letter-spacing: 2px; }
+
+  .gen-btn {
+    padding: 12px 14px;
+    background: var(--border2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: all .15s;
+    font-family: var(--font-mono);
+  }
+  .gen-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    padding: 13px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity .2s;
+    font-family: var(--font-mono);
+  }
+  .btn-primary:hover { opacity: .85; }
+
+  .btn-secondary {
+    padding: 13px 20px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .15s;
+    font-family: var(--font-mono);
+  }
+  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── TOAST ───────────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    z-index: 200;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { border-color: var(--accent); color: var(--accent); }
+  #toast.error   { border-color: var(--danger); color: var(--danger); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .migrate-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+    margin-top: 8px;
+    -webkit-app-region: no-drag;
+    font-family: var(--font-mono);
+  }
+  .migrate-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── MIGRATION MODAL ──────────────────────────────────── */
+  .migrate-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .migrate-tab {
+    flex: 1;
+    padding: 9px;
+    background: none;
+    border: none;
+    border-radius: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .15s;
+    font-family: var(--font-mono);
+  }
+  .migrate-tab.active { background: var(--surface); color: var(--text); }
+
+  .migrate-panel { display: none; }
+  .migrate-panel.active { display: block; }
+
+  .migrate-info {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .migrate-info strong { color: var(--text); }
+
+  .migrate-warn {
+    background: rgba(255,74,110,.08);
+    border: 1px solid rgba(255,74,110,.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: #ff8fa3;
+    line-height: 1.7;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .migrate-warn svg { flex-shrink: 0; margin-top: 1px; }
+
+  .migrate-success {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .migrate-success .big-check {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .migrate-success h3 {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+  .migrate-success p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .import-step { display: none; }
+  .import-step.active { display: block; }
+  .strength-bar {
+    display: flex;
+    gap: 3px;
+    margin-top: 8px;
+  }
+  .strength-seg {
+    flex: 1;
+    height: 3px;
+    background: var(--border2);
+    border-radius: 2px;
+    transition: background .3s;
+  }
+  .strength-seg.s1 { background: var(--danger); }
+  .strength-seg.s2 { background: var(--warn); }
+  .strength-seg.s3 { background: #a8e063; }
+  .strength-seg.s4 { background: var(--accent); }
+
+  .strength-label {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-logo">Crypt<span>Hub</span></div>
+    <div class="lock-subtitle">Secure Password Vault</div>
+    <label class="lock-label" id="lock-label-text">Master Password</label>
+    <input type="password" class="lock-input" id="lock-input" placeholder="••••••••••••" autocomplete="off"/>
+    <button class="lock-btn" id="lock-btn">Unlock</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+
+  <!-- TITLEBAR -->
+  <div id="titlebar">
+    <div class="titlebar-right">
+      <button class="icon-btn" id="lock-app-btn" title="Lock">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+      <span class="sidebar-logo-text">Crypt<em>Hub</em></span>
+    </div>
+    <div class="sidebar-search">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search..."/>
+      </div>
+    </div>
+    <div class="sidebar-cats">
+      <div class="cat-label">Categories</div>
+      <div id="cat-list"></div>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="add-btn" id="add-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Entry
+      </button>
+      <button class="migrate-btn" id="migrate-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+        </svg>
+        Migrate Vault
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="main-header">
+      <div class="main-title" id="main-title">All Passwords</div>
+      <div class="entry-count" id="entry-count"></div>
+    </div>
+    <div id="entry-list"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay hidden" id="entry-modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">New Entry</span>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <input type="hidden" id="edit-id"/>
+    <div class="form-group">
+      <label class="form-label">Label *</label>
+      <input type="text" class="form-input" id="f-label" placeholder="e.g. GitHub, Netflix..."/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username / Email</label>
+      <input type="text" class="form-input" id="f-user" placeholder="user@example.com"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password *</label>
+      <div class="pwd-row">
+        <input type="text" class="form-input" id="f-pwd" placeholder="Enter or generate..."/>
+        <button class="gen-btn" id="gen-btn">⚡ Generate</button>
+      </div>
+      <div class="strength-bar">
+        <div class="strength-seg" id="s1"></div>
+        <div class="strength-seg" id="s2"></div>
+        <div class="strength-seg" id="s3"></div>
+        <div class="strength-seg" id="s4"></div>
+      </div>
+      <div class="strength-label" id="strength-label"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="f-cat">
+        <option>General</option>
+        <option>Social</option>
+        <option>Work</option>
+        <option>Finance</option>
+        <option>Entertainment</option>
+        <option>Dev / Tech</option>
+        <option>Shopping</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="f-notes" placeholder="Optional notes..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="modal-cancel">Cancel</button>
+      <button class="btn-primary" id="modal-save">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- MIGRATION MODAL -->
+<div class="modal-overlay hidden" id="migrate-modal">
+  <div class="modal" style="width:500px">
+    <div class="modal-title">
+      <span>Vault Migration</span>
+      <button class="modal-close" id="migrate-modal-close">×</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="migrate-tabs">
+      <button class="migrate-tab active" data-tab="export">
+        ↑ Export
+      </button>
+      <button class="migrate-tab" data-tab="import">
+        ↓ Import
+      </button>
+    </div>
+
+    <!-- EXPORT PANEL -->
+    <div class="migrate-panel active" id="panel-export">
+      <div class="migrate-info">
+        <strong>How export works:</strong><br/>
+        Creates a single encrypted <code>.crypthub</code> file containing all your passwords.
+        The file is signed with your master password using AES-256-GCM — it cannot be read
+        without your master password on any machine.
+      </div>
+      <div class="migrate-warn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Keep this file somewhere safe. Anyone with this file AND your master password can restore your vault.
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" id="export-cancel">Cancel</button>
+        <button class="btn-primary" id="export-confirm">
+          Export Vault →
+        </button>
+      </div>
+    </div>
+
+    <!-- IMPORT PANEL -->
+    <div class="migrate-panel" id="panel-import">
+
+      <!-- Step 1: Info + pick file -->
+      <div class="import-step active" id="import-step-1">
+        <div class="migrate-info">
+          <strong>How import works:</strong><br/>
+          Select a <code>.crypthub</code> backup file, enter your master password to verify,
+          and CryptHub will restore your vault. <strong>This will completely replace
+          your current data</strong> — one vault, one session.
+        </div>
+        <div class="migrate-warn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Your current vault will be <strong>permanently erased</strong> and replaced with the imported data.
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" id="import-cancel-1">Cancel</button>
+          <button class="btn-primary" id="import-pick-file">Select .crypthub File →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Enter master password -->
+      <div class="import-step" id="import-step-2">
+        <div class="migrate-info" style="margin-bottom:20px">
+          <strong>Vault file loaded.</strong> Enter the master password that was used
+          to protect this vault to verify your identity and decrypt.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Master Password</label>
+          <input type="password" class="form-input" id="import-pwd" placeholder="Enter master password..." autocomplete="off"/>
+        </div>
+        <div class="lock-error" id="import-error" style="margin-bottom:12px"></div>
+        <div class="form-actions">
+          <button class="btn-secondary" id="import-cancel-2">Back</button>
+          <button class="btn-primary" id="import-verify">Verify & Restore Vault</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div class="import-step" id="import-step-3">
+        <div class="migrate-success">
+          <div class="big-check">✓</div>
+          <h3>Vault Restored</h3>
+          <p id="import-success-msg"></p>
+        </div>
+        <div class="form-actions" style="margin-top:24px">
+          <button class="btn-primary" id="import-done">Done</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
