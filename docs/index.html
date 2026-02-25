@@ -28,7 +28,6 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { scroll-behavior: smooth; }
 
   body {
@@ -61,7 +60,6 @@
     transform: translate(-50%, -50%);
     transition: transform .12s ease-out, width .2s, height .2s;
   }
-  body:hover .cursor { opacity: 1; }
 
   /* ── GRID BACKGROUND ───────────────────────────────────── */
   body::before {
@@ -274,27 +272,13 @@
     align-items: center;
     gap: 8px;
   }
-  .t-dot {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-  }
+  .t-dot { width: 12px; height: 12px; border-radius: 50%; }
   .t-dot.r { background: #ff5f57; }
   .t-dot.y { background: #febc2e; }
   .t-dot.g { background: #28c840; }
-  .terminal-title {
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
+  .terminal-title { margin-left: auto; margin-right: auto; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 
-  .terminal-body {
-    padding: 24px;
-    text-align: left;
-    font-size: 13px;
-    line-height: 2;
-  }
+  .terminal-body { padding: 24px; text-align: left; font-size: 13px; line-height: 2; }
   .t-line { display: flex; gap: 12px; }
   .t-prompt { color: var(--accent2); }
   .t-cmd { color: var(--text); }
@@ -311,41 +295,11 @@
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
   /* ── SECTION BASE ──────────────────────────────────────── */
-  section {
-    position: relative;
-    z-index: 1;
-    padding: 100px 24px;
-  }
-
-  .container {
-    max-width: 1080px;
-    margin: 0 auto;
-  }
-
-  .section-label {
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 16px;
-    display: block;
-  }
-
-  .section-title {
-    font-family: var(--ui);
-    font-size: clamp(32px, 4vw, 52px);
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    line-height: 1.05;
-    margin-bottom: 16px;
-  }
-
-  .section-sub {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.8;
-    max-width: 480px;
-  }
+  section { position: relative; z-index: 1; padding: 100px 24px; }
+  .container { max-width: 1080px; margin: 0 auto; }
+  .section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: block; }
+  .section-title { font-family: var(--ui); font-size: clamp(32px, 4vw, 52px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 16px; }
+  .section-sub { font-size: 14px; color: var(--muted); line-height: 1.8; max-width: 480px; }
 
   /* ── FEATURES ──────────────────────────────────────────── */
   #features { border-top: 1px solid var(--border); }
@@ -361,296 +315,190 @@
     margin-top: 64px;
   }
 
-  .feature-card {
-    background: var(--bg);
-    padding: 36px 32px;
-    transition: background .2s;
-    position: relative;
-    overflow: hidden;
-  }
+  .feature-card { background: var(--bg); padding: 36px 32px; transition: background .2s; position: relative; overflow: hidden; }
   .feature-card:hover { background: var(--surface); }
-  .feature-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,229,160,0), transparent);
-    transition: background .3s;
-  }
-  .feature-card:hover::after {
-    background: linear-gradient(90deg, transparent, rgba(0,229,160,.4), transparent);
-  }
+  .feature-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,229,160,0), transparent); transition: background .3s; }
+  .feature-card:hover::after { background: linear-gradient(90deg, transparent, rgba(0,229,160,.4), transparent); }
 
-  .feature-icon {
-    width: 44px; height: 44px;
-    background: rgba(0,229,160,.08);
-    border: 1px solid rgba(0,229,160,.15);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    color: var(--accent);
-  }
-
-  .feature-title {
-    font-family: var(--ui);
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 10px;
-  }
-
-  .feature-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.8;
-  }
+  .feature-icon { width: 44px; height: 44px; background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--accent); }
+  .feature-title { font-family: var(--ui); font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+  .feature-desc { font-size: 12px; color: var(--muted); line-height: 1.8; }
 
   /* ── SECURITY SECTION ──────────────────────────────────── */
-  #security {
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-  }
+  #security { border-top: 1px solid var(--border); background: var(--surface); }
 
-  .security-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: center;
-    margin-top: 64px;
-  }
+  .security-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; margin-top: 64px; }
+  .security-chain { display: flex; flex-direction: column; gap: 0; }
 
-  .security-chain {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
+  .chain-step { display: flex; gap: 20px; align-items: flex-start; position: relative; }
+  .chain-step:not(:last-child)::after { content: ''; position: absolute; left: 19px; top: 40px; bottom: -24px; width: 1px; background: var(--border2); }
 
-  .chain-step {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    position: relative;
-  }
-  .chain-step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 19px;
-    top: 40px;
-    bottom: -24px;
-    width: 1px;
-    background: var(--border2);
-  }
+  .chain-num { width: 40px; height: 40px; border: 1px solid var(--border2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--accent); flex-shrink: 0; background: var(--bg); z-index: 1; }
+  .chain-content { padding-bottom: 32px; }
+  .chain-content h4 { font-family: var(--ui); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .chain-content p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .chain-content code { display: inline-block; margin-top: 8px; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; font-size: 11px; color: var(--accent2); letter-spacing: 1px; }
 
-  .chain-num {
-    width: 40px; height: 40px;
-    border: 1px solid var(--border2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: var(--accent);
-    flex-shrink: 0;
-    background: var(--bg);
-    z-index: 1;
-  }
-
-  .chain-content {
-    padding-bottom: 32px;
-  }
-  .chain-content h4 {
-    font-family: var(--ui);
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .chain-content p {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-  .chain-content code {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 8px 12px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    font-size: 11px;
-    color: var(--accent2);
-    letter-spacing: 1px;
-  }
-
-  .security-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .stat-card {
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 12px;
-    padding: 24px 20px;
-    position: relative;
-    overflow: hidden;
-  }
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-  }
-
-  .stat-value {
-    font-family: var(--ui);
-    font-size: 28px;
-    font-weight: 900;
-    color: var(--accent);
-    letter-spacing: -1px;
-    margin-bottom: 4px;
-  }
-  .stat-label {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
+  .security-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stat-card { background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; padding: 24px 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+  .stat-value { font-family: var(--ui); font-size: 28px; font-weight: 900; color: var(--accent); letter-spacing: -1px; margin-bottom: 4px; }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 
   /* ── MIGRATION SECTION ─────────────────────────────────── */
   #migration { border-top: 1px solid var(--border); }
 
-  .migration-flow {
+  .migration-flow { display: flex; align-items: center; justify-content: center; gap: 0; margin-top: 64px; flex-wrap: wrap; }
+  .flow-step { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 28px 24px; width: 200px; text-align: center; position: relative; }
+  .flow-icon { font-size: 28px; margin-bottom: 12px; }
+  .flow-title { font-family: var(--ui); font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .flow-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .flow-arrow { color: var(--accent); font-size: 20px; padding: 0 12px; opacity: .5; }
+  .flow-file { background: rgba(0,229,160,.06); border-color: rgba(0,229,160,.25); }
+  .flow-file .flow-title { color: var(--accent); }
+
+  /* ── LAUNCH SECTION ────────────────────────────────────── */
+  #launch { border-top: 1px solid var(--border); }
+
+  .launch-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 48px;
+  }
+
+  .launch-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 48px 56px;
+    max-width: 540px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .launch-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  /* animated glow ring */
+  .launch-card::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 20px;
+    background: transparent;
+    border: 1px solid rgba(0,229,160,.0);
+    transition: border-color .3s;
+  }
+  .launch-card:hover::after { border-color: rgba(0,229,160,.2); }
+
+  .launch-icon-wrap {
+    width: 72px; height: 72px;
+    background: rgba(0,229,160,.08);
+    border: 1px solid rgba(0,229,160,.2);
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
-    margin-top: 64px;
-    flex-wrap: wrap;
+    margin: 0 auto 24px;
+    color: var(--accent);
   }
 
-  .flow-step {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 14px;
-    padding: 28px 24px;
-    width: 200px;
-    text-align: center;
-    position: relative;
-  }
-
-  .flow-icon {
-    font-size: 28px;
+  .launch-title {
+    font-family: var(--ui);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
     margin-bottom: 12px;
   }
-  .flow-title {
-    font-family: var(--ui);
+
+  .launch-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 32px;
+  }
+
+  .launch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 40px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
-    margin-bottom: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-family: var(--mono);
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 0 0 0 rgba(0,229,160,0);
   }
-  .flow-desc {
+  .launch-btn:hover {
+    opacity: .9;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,229,160,.25);
+  }
+
+  .launch-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 24px;
+  }
+  .chip {
+    padding: 5px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .chip.accent { border-color: rgba(0,229,160,.3); color: var(--accent2); }
+
+  .launch-or {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     font-size: 11px;
     color: var(--muted);
-    line-height: 1.6;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    width: 100%;
+    max-width: 540px;
+  }
+  .launch-or::before, .launch-or::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
   }
 
-  .flow-arrow {
-    color: var(--accent);
-    font-size: 20px;
-    padding: 0 12px;
-    opacity: .5;
-  }
-
-  .flow-file {
-    background: rgba(0,229,160,.06);
-    border-color: rgba(0,229,160,.25);
-  }
-  .flow-file .flow-title { color: var(--accent); }
-
-  /* ── DOWNLOAD SECTION ──────────────────────────────────── */
-  #download {
-    border-top: 1px solid var(--border);
-    text-align: center;
-  }
-
-  .download-grid {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 48px;
-  }
-
-  .download-card {
+  .desktop-card {
     background: var(--surface);
     border: 1px solid var(--border2);
     border-radius: 14px;
     padding: 28px 32px;
-    width: 220px;
-    text-align: center;
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color .2s, transform .15s;
-    position: relative;
-    overflow: hidden;
+    max-width: 540px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 24px;
   }
-  .download-card:hover { border-color: var(--accent); transform: translateY(-3px); }
-  .download-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,229,160,.4), transparent);
-    opacity: 0;
-    transition: opacity .2s;
-  }
-  .download-card:hover::before { opacity: 1; }
-
-  .dl-icon { font-size: 32px; margin-bottom: 12px; }
-  .dl-platform {
-    font-family: var(--ui);
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  .dl-arch {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 16px;
-    line-height: 1.5;
-  }
-  .dl-btn {
-    display: block;
-    padding: 9px;
-    background: var(--accent);
-    color: #000;
-    border-radius: 7px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    transition: opacity .2s;
-  }
-  .download-card:hover .dl-btn { opacity: .85; }
-
-  .dl-soon {
-    display: block;
-    padding: 9px;
-    background: var(--border);
-    color: var(--muted);
-    border-radius: 7px;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-  }
-
-  .download-note {
-    margin-top: 24px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-  .download-note a { color: var(--accent); text-decoration: none; }
-  .download-note a:hover { text-decoration: underline; }
+  .desktop-icon { font-size: 32px; flex-shrink: 0; }
+  .desktop-text h4 { font-family: var(--ui); font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .desktop-text p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .desktop-text a { color: var(--accent); text-decoration: none; }
+  .desktop-text a:hover { text-decoration: underline; }
 
   /* ── FOOTER ────────────────────────────────────────────── */
   footer {
@@ -665,34 +513,12 @@
     z-index: 1;
   }
 
-  .footer-logo {
-    font-family: var(--ui);
-    font-size: 16px;
-    font-weight: 800;
-    text-decoration: none;
-    color: var(--text);
-  }
+  .footer-logo { font-family: var(--ui); font-size: 16px; font-weight: 800; text-decoration: none; color: var(--text); }
   .footer-logo em { font-style: normal; color: var(--accent); }
-
-  .footer-links {
-    display: flex;
-    gap: 24px;
-  }
-  .footer-links a {
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-decoration: none;
-    transition: color .2s;
-  }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .2s; }
   .footer-links a:hover { color: var(--text); }
-
-  .footer-copy {
-    font-size: 11px;
-    color: var(--muted2);
-    letter-spacing: 1px;
-  }
+  .footer-copy { font-size: 11px; color: var(--muted2); letter-spacing: 1px; }
 
   /* ── ANIMATIONS ────────────────────────────────────────── */
   @keyframes fadeUp {
@@ -700,15 +526,8 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity .6s ease, transform .6s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 
   /* ── RESPONSIVE ────────────────────────────────────────── */
   @media (max-width: 768px) {
@@ -720,12 +539,13 @@
     .flow-arrow { display: none; }
     footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
     .hero-terminal { display: none; }
+    .launch-card { padding: 32px 24px; }
+    .desktop-card { flex-direction: column; text-align: center; }
   }
 </style>
 </head>
 <body>
 
-<!-- Custom cursor -->
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursor-ring"></div>
 
@@ -744,7 +564,7 @@
     <a href="#security">Security</a>
     <a href="#migration">Migration</a>
     <a href="https://github.com/srsdesigndev/crypthub" target="_blank">GitHub</a>
-    <a href="#download" class="nav-cta">Download</a>
+    <a href="crypthub.html" class="nav-cta">Launch App →</a>
   </div>
 </nav>
 
@@ -763,13 +583,15 @@
   </p>
 
   <div class="hero-actions">
-    <a href="#download" class="btn-primary">
+    <a href="crypthub.html" class="btn-primary">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+        <line x1="6" y1="1" x2="6" y2="4"/>
+        <line x1="10" y1="1" x2="10" y2="4"/>
+        <line x1="14" y1="1" x2="14" y2="4"/>
       </svg>
-      Download Free
+      Launch Web App
     </a>
     <a href="https://github.com/srsdesigndev/crypthub" target="_blank" class="btn-ghost">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -808,7 +630,6 @@
     <p class="section-sub reveal">Built for people who want full control over their passwords without handing them to a third party.</p>
 
     <div class="features-grid reveal">
-
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -816,7 +637,7 @@
           </svg>
         </div>
         <div class="feature-title">AES-256-GCM Encryption</div>
-        <div class="feature-desc">Every password is individually encrypted with a random IV before it touches your disk. Military-grade, authenticated encryption.</div>
+        <div class="feature-desc">Every password is individually encrypted with a random IV before it touches storage. Military-grade, authenticated encryption.</div>
       </div>
 
       <div class="feature-card">
@@ -825,8 +646,8 @@
             <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
           </svg>
         </div>
-        <div class="feature-title">Local SQLite Storage</div>
-        <div class="feature-desc">Your data lives in a single SQLite file on your machine. No internet connection required — ever. You own your data completely.</div>
+        <div class="feature-title">Local-Only Storage</div>
+        <div class="feature-desc">Your data lives in your browser's IndexedDB — or a local SQLite file in the desktop app. No internet connection required. Ever.</div>
       </div>
 
       <div class="feature-card">
@@ -837,7 +658,7 @@
           </svg>
         </div>
         <div class="feature-title">Vault Migration</div>
-        <div class="feature-desc">Export your entire vault as a signed, encrypted <code style="font-size:11px;color:var(--accent2)">.crypthub</code> file. Import on any machine with your master password.</div>
+        <div class="feature-desc">Export your entire vault as a signed, encrypted <code style="font-size:11px;color:var(--accent2)">.crypthub</code> file. Import on any machine or browser with your master password.</div>
       </div>
 
       <div class="feature-card">
@@ -847,7 +668,7 @@
           </svg>
         </div>
         <div class="feature-title">Master Password Auth</div>
-        <div class="feature-desc">Your master password is never stored. Only a scrypt-derived hash with a random salt. The session key lives in memory only.</div>
+        <div class="feature-desc">Your master password is never stored. Only a PBKDF2-derived hash with a random salt. The session key lives in memory only.</div>
       </div>
 
       <div class="feature-card">
@@ -869,7 +690,6 @@
         <div class="feature-title">Search & Categories</div>
         <div class="feature-desc">Instantly filter by label, username, or category. Organise passwords into Social, Work, Finance, Dev, and more.</div>
       </div>
-
     </div>
   </div>
 </section>
@@ -883,25 +703,22 @@
 
     <div class="security-layout">
       <div class="security-chain reveal">
-
         <div class="chain-step">
           <div class="chain-num">01</div>
           <div class="chain-content">
-            <h4>Master Password → scrypt</h4>
-            <p>Your password is never stored. It's run through scrypt with a random 32-byte salt to produce a 64-byte hash.</p>
-            <code>scrypt(password, salt, 64) → masterHash</code>
+            <h4>Master Password → PBKDF2</h4>
+            <p>Your password is never stored. It's run through PBKDF2 (310k iterations) with a random 32-byte salt to produce a hash.</p>
+            <code>PBKDF2(password, salt, 310000) → masterHash</code>
           </div>
         </div>
-
         <div class="chain-step">
           <div class="chain-num">02</div>
           <div class="chain-content">
             <h4>Session Key Derivation</h4>
-            <p>A 32-byte encryption key is derived from the master hash. It lives in memory only — cleared on lock or close.</p>
-            <code>scrypt(masterHash, salt, 32) → sessionKey</code>
+            <p>A 256-bit encryption key is derived and lives in memory only — cleared immediately on lock or tab close.</p>
+            <code>PBKDF2(password, salt) → sessionKey (CryptoKey)</code>
           </div>
         </div>
-
         <div class="chain-step">
           <div class="chain-num">03</div>
           <div class="chain-content">
@@ -910,16 +727,14 @@
             <code>AES-256-GCM(password, sessionKey, iv)</code>
           </div>
         </div>
-
         <div class="chain-step">
           <div class="chain-num">04</div>
           <div class="chain-content">
             <h4>Export Signature Chain</h4>
             <p>Export files use a two-layer key chain. Tamper with the file and the auth tag verification fails on import.</p>
-            <code>scrypt(masterHash, exportSalt) → exportKey</code>
+            <code>PBKDF2(masterHash, exportSalt) → exportKey</code>
           </div>
         </div>
-
       </div>
 
       <div class="security-stats reveal">
@@ -954,7 +769,7 @@
     <div class="migration-flow reveal">
       <div class="flow-step">
         <div class="flow-icon">🖥️</div>
-        <div class="flow-title">Your Mac</div>
+        <div class="flow-title">Your Browser</div>
         <div class="flow-desc">Unlock vault with master password</div>
       </div>
       <div class="flow-arrow">→</div>
@@ -978,56 +793,71 @@
       <div class="flow-arrow">→</div>
       <div class="flow-step">
         <div class="flow-icon">💻</div>
-        <div class="flow-title">Any Machine</div>
+        <div class="flow-title">Any Device</div>
         <div class="flow-desc">Vault fully restored, ready to use</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── DOWNLOAD ───────────────────────────────────────────────── -->
-<section id="download" style="border-top:1px solid var(--border)">
-  <div class="container" style="text-align:center">
-    <span class="section-label reveal">Get CryptHub</span>
-    <h2 class="section-title reveal">Free. Forever. No catch.</h2>
-    <p class="section-sub reveal" style="margin:0 auto">Download for your platform or build from source. MIT licensed, open source.</p>
-
-    <div class="download-grid reveal">
-
-      <a href="https://github.com/srsdesigndev/crypthub/releases/latest" class="download-card">
-        <div class="dl-icon">🍎</div>
-        <div class="dl-platform">macOS</div>
-        <div class="dl-arch">Apple Silicon (M1/M2/M3)<br/>arm64 · .dmg</div>
-        <span class="dl-btn">↓ Download</span>
-      </a>
-
-      <a href="https://github.com/srsdesigndev/crypthub/releases/latest" class="download-card">
-        <div class="dl-icon">🍎</div>
-        <div class="dl-platform">macOS</div>
-        <div class="dl-arch">Intel<br/>x64 · .dmg</div>
-        <span class="dl-btn">↓ Download</span>
-      </a>
-
-      <div class="download-card" style="cursor:default">
-        <div class="dl-icon">🪟</div>
-        <div class="dl-platform">Windows</div>
-        <div class="dl-arch">64-bit<br/>x64 · .exe</div>
-        <span class="dl-soon">Coming Soon</span>
+<!-- ── LAUNCH SECTION ─────────────────────────────────────────── -->
+<section id="launch" style="border-top:1px solid var(--border)">
+  <div class="container">
+    <div class="launch-center">
+      <div>
+        <span class="section-label reveal" style="text-align:center;display:block">Get Started</span>
+        <h2 class="section-title reveal" style="text-align:center">No install required.</h2>
+        <p class="section-sub reveal" style="margin:0 auto;text-align:center">Run CryptHub directly in your browser — no download, no sudo, no setup.</p>
       </div>
 
-      <div class="download-card" style="cursor:default">
-        <div class="dl-icon">🐧</div>
-        <div class="dl-platform">Linux</div>
-        <div class="dl-arch">64-bit<br/>x64 · .AppImage</div>
-        <span class="dl-soon">Coming Soon</span>
+      <!-- Primary: Web App -->
+      <div class="launch-card reveal">
+        <div class="launch-icon-wrap">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <div class="launch-title">Launch in Browser</div>
+        <div class="launch-desc">
+          Works on any device with a modern browser. Your vault is stored locally in IndexedDB —
+          encrypted, private, and never transmitted anywhere.
+        </div>
+        <a href="crypthub.html" class="launch-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Open CryptHub
+        </a>
+        <div class="launch-chips">
+          <span class="chip accent">No Install</span>
+          <span class="chip accent">Works Offline</span>
+          <span class="chip">Chrome</span>
+          <span class="chip">Firefox</span>
+          <span class="chip">Safari</span>
+          <span class="chip">Edge</span>
+        </div>
+      </div>
+
+      <div class="launch-or reveal">or</div>
+
+      <!-- Secondary: Desktop -->
+      <div class="desktop-card reveal">
+        <div class="desktop-icon">🖥️</div>
+        <div class="desktop-text">
+          <h4>Prefer the desktop app?</h4>
+          <p>
+            The Electron app uses SQLite + native crypto for extra performance.
+            Clone the repo and build it yourself — MIT licensed, open source.<br/>
+            <a href="https://github.com/srsdesigndev/crypthub" target="_blank">View on GitHub →</a>
+          </p>
+        </div>
       </div>
 
     </div>
-
-    <p class="download-note reveal">
-      macOS: If you see a security warning, right-click the app and select <strong>Open</strong>.<br/>
-      Prefer to build from source? <a href="https://github.com/srsdesigndev/crypthub" target="_blank">View the repo →</a>
-    </p>
   </div>
 </section>
 
