@@ -1,6 +1,4 @@
-![alt text](<assets/auth-crypthub.png>)
-![alt text](<assets/dashboard-crypthub.png>)
-![alt text](<assets/add-entry-crypthub.png>)
+![alt text](<assets/crypthub-main.png>)
 
 # CryptHub
 
@@ -56,47 +54,8 @@ exportKey  = scrypt(masterHash, exportSalt, 32)
 
 This means the export file can only be decrypted by someone who knows the original master password. If the file is tampered with, the GCM auth tag verification will fail and the import is rejected.
 
----
-
-## Download
-
-No coding required. Just download and run.
-
-| Platform | Download |
-|---|---|
-| macOS (Apple Silicon) | [CryptHub-1.0.0-arm64.dmg](https://github.com/srsdesigndev/crypthub/releases/latest) |
-| macOS (Intel) | [CryptHub-1.0.0-x64.dmg](https://github.com/srsdesigndev/crypthub/releases/latest) |
-| Windows | [CryptHub-Setup-1.0.0.exe](https://github.com/srsdesigndev/crypthub/releases/latest) |
-| Linux | [CryptHub-1.0.0.AppImage](https://github.com/srsdesigndev/crypthub/releases/latest) |
-
-> All release binaries are attached to the [Releases](https://github.com/srsdesigndev/crypthub/releases) page.
-
----
 
 ## Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) v18 or higher
-- macOS, Windows, or Linux
-- Xcode Command Line Tools (macOS only): `xcode-select --install`
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/srsdesigndev/crypthub.git
-cd crypthub
-
-# Install dependencies
-npm install
-
-# Rebuild native SQLite module for your Electron version
-./node_modules/.bin/electron-rebuild
-
-# Launch
-npm start
-```
 
 ### First Launch
 
@@ -138,20 +97,6 @@ Click the lock icon in the top right corner at any time. The session key is clea
 
 ---
 
-## Project Structure
-
-```
-crypthub/
-├── main.js          # Electron main process, IPC handlers, crypto, SQLite
-├── preload.js       # Context bridge — exposes safe API to renderer
-├── index.html       # UI markup and styles
-├── renderer.js      # UI logic and event handling
-├── package.json
-├── .gitignore
-└── README.md
-```
-
----
 
 ## Built With
 
@@ -178,18 +123,6 @@ git push origin feature/your-feature-name
 
 Please keep pull requests focused on a single concern. Security-related changes should include a clear explanation of the threat model being addressed.
 
----
-
-## Roadmap
-
-- [ ] Auto-lock after inactivity timeout
-- [ ] Browser extension integration
-- [ ] Biometric unlock (Touch ID / Windows Hello)
-- [ ] Custom categories
-- [ ] Entry history / audit log
-- [ ] Packaged installers (.dmg, .exe, .AppImage)
-
----
 
 ## License
 
