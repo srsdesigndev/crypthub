@@ -1,37 +1,38 @@
-
-![alt text](<assets/crypthub-main.png>)
+![CryptHub](<assets/crypthub-main.png>)
 
 # CryptHub
 
-> A local-first, encrypted password manager built with Electron & SQLite. Your vault never leaves your machine.
+> A local-first, encrypted password manager that runs entirely in your browser. Your vault never leaves your device.
 
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
-![Electron](https://img.shields.io/badge/electron-28-blue?style=flat-square)
 ![Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)
+![Encryption](https://img.shields.io/badge/encryption-AES--256--GCM-blue?style=flat-square)
+![Storage](https://img.shields.io/badge/storage-local--only-orange?style=flat-square)
 
 ---
 
 ## What is CryptHub?
 
-CryptHub is an open-source desktop password manager that keeps everything local — no cloud, no subscriptions, no accounts, no telemetry. Every password is encrypted with **AES-256-GCM** before it touches your disk. The only way in is your master password.
+CryptHub is an open-source, browser-based password manager that keeps everything local — no cloud, no subscriptions, no accounts, no telemetry. Every password is encrypted with **AES-256-GCM** before it touches your browser's storage. The only way in is your master password.
 
-When you need to move to a new machine, CryptHub lets you export your entire vault as a single encrypted `.crypthub` file. Import it anywhere, verify with your master password, and your vault is restored exactly as it was.
+When you need to move to a new device, CryptHub lets you export your entire vault as a single encrypted `.crypthub` file. Import it on any browser, verify with your master password, and your vault is restored exactly as it was.
+
+🌐 **Live at [crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)** — no install, no setup, works in any modern browser.
 
 ---
 
 ## Features
 
 - **AES-256-GCM encryption** — every password is individually encrypted at rest
-- **Master password authentication** — scrypt key derivation, never stored in plain text
-- **Local SQLite storage** — no internet connection required, ever
+- **Master password authentication** — PBKDF2 key derivation, never stored in plain text
+- **Local IndexedDB storage** — no internet connection required after first load, ever
 - **Password generator** — cryptographically random, configurable length and symbols
 - **Password strength meter** — real-time feedback as you type
 - **Category organisation** — group passwords by Social, Work, Finance, Dev, and more
 - **Full-text search** — filter entries instantly across label, username, and category
-- **Vault migration** — export to a signed `.crypthub` binary file, import on any machine
+- **Vault migration** — export to a signed `.crypthub` encrypted file, import on any device
 - **One vault, one session** — no merging, no conflicts, clean slate on import
-- **Lock on demand** — session key lives in memory only, cleared on lock
+- **Lock on demand** — session key lives in memory only, cleared on lock or tab close
 
 ---
 
@@ -39,24 +40,31 @@ When you need to move to a new machine, CryptHub lets you export your entire vau
 
 | Layer | Implementation |
 |---|---|
-| Password hashing | `scrypt` (N=32768, r=8, p=1) |
+| Password hashing | PBKDF2 (310,000 iterations, random 32-byte salt) |
 | Vault encryption | AES-256-GCM with random IV per entry |
-| Export file | AES-256-GCM, signed with master password via scrypt chain |
+| Export file | AES-256-GCM, signed with master password via PBKDF2 chain |
 | Session key | In-memory only, never written to disk |
-| Master password | Never stored — only a salted scrypt hash |
+| Master password | Never stored — only a salted PBKDF2 hash |
 | Tamper detection | GCM authentication tag on every encrypted value |
 
 The `.crypthub` export file uses a two-layer key derivation chain:
 
 ```
-masterHash = scrypt(userPassword, masterSalt, 64)
-exportKey  = scrypt(masterHash, exportSalt, 32)
+masterHash = PBKDF2(userPassword, masterSalt, 310000)
+exportKey  = PBKDF2(masterHash, exportSalt, 32)
 ```
 
 This means the export file can only be decrypted by someone who knows the original master password. If the file is tampered with, the GCM auth tag verification will fail and the import is rejected.
 
+---
 
 ## Getting Started
+
+No installation required. Simply visit:
+
+👉 **[crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)**
+
+Works on any device with a modern browser (Chrome, Firefox, Safari, Edge). Your vault is stored locally in your browser's IndexedDB — encrypted, private, and never transmitted anywhere.
 
 ### First Launch
 
@@ -81,8 +89,7 @@ Click **Migrate Vault** in the sidebar.
 **To export:**
 1. Select the **Export** tab
 2. Click **Export Vault**
-3. Choose where to save your `.crypthub` file
-4. Move this file to your new machine (USB, secure cloud storage, etc.)
+3. Save your `.crypthub` file to a safe location (USB, secure storage, etc.)
 
 **To import:**
 1. Select the **Import** tab
@@ -98,12 +105,41 @@ Click the lock icon in the top right corner at any time. The session key is clea
 
 ---
 
+## FAQ
+
+**What happens if I forget my master password?**
+There is no recovery option. Your master password is never stored anywhere — not on your device, not on any server. If you forget it, your vault cannot be decrypted. Write it down and keep it somewhere safe.
+
+**Is my data backed up anywhere?**
+No. Your vault lives entirely in your browser's IndexedDB. Use the **Export** feature regularly to keep a backup `.crypthub` file on a USB drive or secure storage.
+
+**Does CryptHub work offline?**
+Yes. After the first load, CryptHub works fully offline. No internet connection is ever required to access your vault.
+
+**Can I use it on multiple devices?**
+Yes — use the **Migrate Vault** feature to export your vault and import it on any other device or browser.
+
+**Is it safe to use in a shared or public computer?**
+Not recommended. Always lock your vault before leaving and clear browser data after use on shared machines.
+
+---
+
+## Browser Support
+
+| Browser | Supported |
+|---|---|
+| Chrome / Chromium | ✅ |
+| Firefox | ✅ |
+| Safari | ✅ |
+| Edge | ✅ |
+| Opera | ✅ |
+
+---
 
 ## Built With
 
-- [Electron](https://www.electronjs.org/) — cross-platform desktop framework
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — fast, synchronous SQLite bindings
-- [Node.js crypto](https://nodejs.org/api/crypto.html) — AES-256-GCM, scrypt, random bytes (built-in)
+- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) — AES-256-GCM, PBKDF2, random bytes (built-in to all modern browsers)
+- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) — local browser storage
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) + [Syne](https://fonts.google.com/specimen/Syne) — typography
 
 No external UI frameworks. No tracking libraries. No analytics.
@@ -124,6 +160,7 @@ git push origin feature/your-feature-name
 
 Please keep pull requests focused on a single concern. Security-related changes should include a clear explanation of the threat model being addressed.
 
+---
 
 ## License
 
