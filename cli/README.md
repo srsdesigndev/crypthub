@@ -26,6 +26,15 @@ Installs `crypthub` as a global command. Run from anywhere after install.
 
 ---
 
+## Quick start
+
+```bash
+crypthub init     # create a new vault
+crypthub open     # unlock and enter session
+```
+
+---
+
 ## Commands
 
 ### Outside a session
@@ -40,49 +49,93 @@ crypthub version           # show version
 crypthub help              # show help
 ```
 
-### Inside a session
+### Inside a session — Read
 
 ```
-list [category]    list all entries, filter by category optionally
-get  <label>       copy password to clipboard
-show <label>       reveal full entry including password
-add                add a new entry interactively
-edit <label>       edit an existing entry
-delete <label>     delete an entry
-search <query>     search across label, username, notes
-dashboard          vault overview — stats, categories, recent entries
-info               vault file stats
-cls                clear screen
-lock               lock vault and exit
-help               show available commands
+list [category]            list all entries, filter by category optionally
+get  <label>               copy password to clipboard
+copy <label>               alias for get
+show <label>               reveal full entry including password
+note <label>               view notes on an entry
+search <query>             search across label, username, notes
+```
+
+### Inside a session — Write
+
+```
+add                        add a new entry interactively
+add "<label> [email] [mode] [category]"
+                           quick add — password auto-generated
+edit   <label>             edit full entry interactively
+update <label> <mode>      update password by mode — copies to clipboard
+update <label> pass:<pwd>  update with exact password — copies to clipboard
+rename <label> <new-label> rename an entry label
+note   <label> <text>      set or update notes on an entry
+delete <label>             delete an entry
+```
+
+### Inside a session — Vault
+
+```
+dashboard                  vault overview — stats, categories, recent entries
+info                       vault file stats
+cls                        clear screen
+lock                       lock vault and exit
+help                       show all commands
 ```
 
 ---
 
-## Migrating from the web app
+## Password modes
 
-See [MIGRATING.md](./MIGRATING.md) for the full guide.
+Used in `add`, `update`, and quick add:
 
-Quick version:
-
-```bash
-# find your web app vault
-crypthub locate
-
-# point CLI at it
-crypthub use ~/Downloads/my-vault.crypthub
-
-# open with same master password you use in the browser
-crypthub open
-```
+| Mode | Length | Characters |
+|---|---|---|
+| `standard` | 20 | letters + numbers + symbols |
+| `strong` | 32 | full character set |
+| `simple` | 14 | letters + numbers only |
+| `pin` | 6 | digits only |
+| `pin8` | 8 | digits only |
+| `words` | ~25 | `word-word-word-word-42` |
 
 ---
 
-## Quick start — new vault
+## Examples
 
-```bash
-crypthub init     # creates vault, saves config
-crypthub open     # unlock and enter session
+**Add entry — interactive:**
+```
+crypthub › add
+```
+
+**Add entry — quick one-liner:**
+```
+crypthub › add Netflix user@test.com standard Entertainment
+crypthub › add AWS admin@company.com strong Work
+crypthub › add GitHub user@test.com words Dev/Tech
+```
+
+**Update password:**
+```
+crypthub › update Netflix strong
+crypthub › update Netflix pass:myExactNewPassword123
+```
+
+**View and set notes:**
+```
+crypthub › note Netflix
+crypthub › note Netflix shared account with family
+```
+
+**Rename an entry:**
+```
+crypthub › rename Netflix NetflixUS
+```
+
+**Rotate a password quickly:**
+```
+crypthub › update AWS strong
+✓ Password updated: AWS — new password copied to clipboard.
 ```
 
 ---
@@ -115,28 +168,60 @@ crypthub › list
 ──────────────────────────────────────────────────────────────
   ID    LABEL                   USERNAME                CATEGORY
 ──────────────────────────────────────────────────────────────
-  1     GitHub                  user@example.com        [Dev/Tech]
+  1     GitHub                  user@example.com        [Dev/Tech]  ·
   2     Netflix                 user@example.com        [Entertainment]
-  3     AWS                     admin@company.com       [Work]
+  3     AWS                     admin@company.com       [Work]  ·
 ──────────────────────────────────────────────────────────────
-  3 entries
+  3 entries                                        · = has notes
 
-crypthub › get github
+crypthub › update Netflix strong
 
-──────────────────────────────────────────────────────────────
-  GitHub  [Dev/Tech]
-  username : user@example.com
-──────────────────────────────────────────────────────────────
+✓ Password updated: Netflix — new password copied to clipboard.
 
-✓ Password copied to clipboard.
+crypthub › note Netflix shared account with family
 
-crypthub › dashboard
-  [ shows vault stats, category chart, recent entries ]
+✓ Note saved: Netflix
+
+crypthub › rename Netflix NetflixUS
+
+✓ Renamed: Netflix → NetflixUS
 
 crypthub › lock
 
 ✓ Vault locked. Session cleared.
 ```
+
+---
+
+## Migrating from the web app
+
+If you have been using the CryptHub web app and want to manage the same vault from the terminal, no data migration is required. The CLI reads the exact same `.crypthub` file the web app writes — you just need to point the CLI at the right file.
+
+```bash
+# step 1 — find your web app vault file
+crypthub locate
+
+# step 2 — point the CLI at it (file stays where it is, nothing is moved)
+crypthub use ~/Downloads/my-vault.crypthub
+
+# step 3 — confirm it's set correctly
+crypthub status
+
+# step 4 — open with the same master password you use in the browser
+crypthub open
+```
+
+Once pointed at the same file, the web app and CLI share the vault completely. Changes made in the browser are visible in the terminal and vice versa — just unlock with your master password.
+
+For detailed steps and common problems: [MIGRATING.md](./MIGRATING.md)
+
+---
+
+## Troubleshooting
+
+Install errors, `command not found`, vault not found, wrong password, clipboard issues, shell PATH problems (bash vs zsh vs conda), and more.
+
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 
 ---
 
@@ -147,6 +232,8 @@ crypthub › lock
 | macOS | `pbcopy` | built-in, works automatically |
 | Windows | `clip` | built-in, works automatically |
 | Linux | `xclip` | install with `sudo apt install xclip` |
+
+Password is automatically copied to clipboard on `get`, `copy`, `add` (quick mode), and `update`. Never shown in terminal unless you use `show`.
 
 ---
 
@@ -178,8 +265,3 @@ rm -rf ~/.crypthub
 
 See [SECURITY.md](../SECURITY.md) for the full threat model.  
 CLI uses Node.js built-in `crypto` module — no third-party libraries.
-
-
-## Troubleshooting
-
-See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)

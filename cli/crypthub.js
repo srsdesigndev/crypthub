@@ -77,6 +77,78 @@ function tempMsg(msg, ms = 1500) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// ── password generator ────────────────────────────────────────
+//  modes: standard | strong | simple | pin | pin8 | words
+const MODES = {
+  standard: { len: 20, chars: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+' },
+  strong:   { len: 32, chars: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?' },
+  simple:   { len: 14, chars: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' },
+  pin:      { len: 6,  chars: '0123456789' },
+  pin8:     { len: 8,  chars: '0123456789' },
+};
+
+const WORDLIST = [
+  'apple','bridge','cloud','delta','eagle','flame','grove','hotel',
+  'ivory','jungle','karma','lemon','mango','noble','ocean','pearl',
+  'quest','river','solar','tiger','ultra','valor','water','xenon',
+  'yacht','zebra','amber','blaze','coral','drift','ember','frost',
+  'glade','haven','inlet','joker','knoll','lunar','maple','north',
+  'orbit','plaza','quill','ridge','stone','tower','unity','vivid',
+  'whirl','xylem','yards','zonal',
+];
+
+function generatePassword(mode) {
+  mode = (mode || 'standard').toLowerCase();
+
+  if (mode === 'words') {
+    const bytes = crypto.randomBytes(4);
+    const words = Array.from(bytes).map(b => WORDLIST[b % WORDLIST.length]);
+    const num   = crypto.randomBytes(1)[0] % 90 + 10;
+    return `${words.join('-')}-${num}`;
+  }
+
+  const cfg = MODES[mode];
+  if (!cfg) return null;
+
+  const bytes = crypto.randomBytes(cfg.len * 2);
+  return Array.from(bytes)
+    .map(b => cfg.chars[b % cfg.chars.length])
+    .slice(0, cfg.len)
+    .join('');
+}
+
+// parse one-liner: "Netflix user@test.com standard Work"
+// returns { label, username, mode, category } — all optional except label
+function parseOneLiner(str) {
+  if (!str) return null;
+  const tokens   = str.trim().split(/\s+/);
+  const modeKeys = [...Object.keys(MODES), 'words'];
+  const cats     = ['general','social','work','finance','entertainment','dev/tech','shopping','other'];
+
+  let label    = null;
+  let username = null;
+  let mode     = null;
+  let category = null;
+
+  for (const token of tokens) {
+    const t = token.toLowerCase();
+    if (modeKeys.includes(t) && !mode) {
+      mode = t; continue;
+    }
+    if (cats.includes(t) && !category) {
+      category = token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+      continue;
+    }
+    if (token.includes('@') && !username) {
+      username = token; continue;
+    }
+    if (!label) { label = token; continue; }
+  }
+
+  if (!label) return null;
+  return { label, username, mode: mode || 'standard', category: category || 'General' };
+}
+
 // ── config helpers ────────────────────────────────────────────
 function loadConfig() {
   if (!fs.existsSync(CONFIG_FILE)) return {};
@@ -428,12 +500,20 @@ async function interactiveShell() {
         shellList(arg); break;
       case 'get':
         shellGet(arg); break;
+      case 'copy': case 'cp':
+        shellCopy(arg); break;
       case 'show':
         shellShow(arg); break;
       case 'add':
-        rl.close(); await shellAdd(); return interactiveShell();
+        rl.close(); await shellAdd(arg || null); return interactiveShell();
       case 'edit':
         rl.close(); await shellEdit(arg); return interactiveShell();
+      case 'update':
+        await shellUpdate(arg); break;
+      case 'rename': case 'mv':
+        shellRename(arg); break;
+      case 'note':
+        await shellNote(arg); break;
       case 'delete': case 'del': case 'rm':
         shellDelete(arg); break;
       case 'search': case 'find':
@@ -476,11 +556,12 @@ function shellList(filter) {
   console.log(`${c.dim}  ${'ID'.padEnd(5)}${'LABEL'.padEnd(24)}${'USERNAME'.padEnd(24)}CATEGORY${c.reset}`);
   console.log(line());
   entries.forEach(e => {
+    const notes = e.notes ? ` ${c.dim}·${c.reset}` : '';
     console.log(
       `  ${c.dim}${String(e.id).padEnd(5)}${c.reset}` +
       `${c.bold}${e.label.padEnd(24)}${c.reset}` +
       `${c.dim}${(e.username || '—').padEnd(24)}${c.reset}` +
-      `${c.dim}[${e.category || 'general'}]${c.reset}`
+      `${c.dim}[${e.category || 'general'}]${c.reset}${notes}`
     );
   });
   console.log(line());
@@ -528,8 +609,52 @@ function shellShow(label) {
   console.log();
 }
 
-async function shellAdd() {
+async function shellAdd(oneLiner) {
   requireSession();
+
+  // ── quick mode: add "Netflix user@test.com standard Work" ────
+  const quick = parseOneLiner(oneLiner);
+  if (quick) {
+    const password = generatePassword(quick.mode);
+    if (!password) {
+      fail(`Unknown mode: "${quick.mode}". Use: standard, strong, simple, pin, pin8, words`);
+      return;
+    }
+
+    SESSION.data.entries.push({
+      id:         SESSION.data.nextId++,
+      label:      quick.label,
+      username:   quick.username || '',
+      password,
+      category:   quick.category,
+      notes:      '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+
+    persist();
+
+    // copy to clipboard silently
+    try {
+      const cmd = process.platform === 'darwin' ? 'pbcopy'
+                : process.platform === 'win32'  ? 'clip'
+                : 'xclip -selection clipboard';
+      require('child_process').execSync(cmd, { input: password });
+    } catch {}
+
+    console.log();
+    console.log(line());
+    console.log(`  ${c.bold}${quick.label}${c.reset}  ${c.dim}[${quick.category}]${c.reset}`);
+    if (quick.username) console.log(`  username : ${c.dim}${quick.username}${c.reset}`);
+    console.log(`  mode     : ${c.dim}${quick.mode}${c.reset}`);
+    console.log(line());
+    console.log();
+    await tempMsg(`Entry saved — password copied to clipboard.`, 1500);
+    console.log();
+    return;
+  }
+
+  // ── interactive mode ──────────────────────────────────────────
   console.log();
   bold('  New Entry');
   console.log(line());
@@ -539,8 +664,28 @@ async function shellAdd() {
   if (!label) { fail('Label is required.'); return; }
 
   const username = await prompt('  Username/Email : ');
-  const password = await promptPassword('  Password *     : ');
-  if (!password) { fail('Password is required.'); return; }
+
+  // password — type or pick a mode
+  console.log();
+  info('  Password options:');
+  info('    type a password   — enter it manually');
+  info('    press Enter       — generates "standard" (20 chars)');
+  info('    type a mode       — standard | strong | simple | pin | pin8 | words');
+  console.log();
+  const pwdInput = await prompt('  Password *     : ');
+
+  let password;
+  const modeKeys = [...Object.keys(MODES), 'words'];
+  if (!pwdInput) {
+    password = generatePassword('standard');
+    info(`  generated: standard mode`);
+  } else if (modeKeys.includes(pwdInput.toLowerCase())) {
+    password = generatePassword(pwdInput.toLowerCase());
+    if (!password) { fail(`Unknown mode: "${pwdInput}"`); return; }
+    info(`  generated: ${pwdInput.toLowerCase()} mode`);
+  } else {
+    password = pwdInput;
+  }
 
   console.log();
   info('  Categories: General, Social, Work, Finance, Entertainment, Dev/Tech, Shopping, Other');
@@ -555,8 +700,19 @@ async function shellAdd() {
   });
 
   persist();
-  console.log();
-  await tempMsg(`Entry saved: ${c.bold}${label}${c.reset}`, 1500);
+
+  // copy to clipboard
+  try {
+    const cmd = process.platform === 'darwin' ? 'pbcopy'
+              : process.platform === 'win32'  ? 'clip'
+              : 'xclip -selection clipboard';
+    require('child_process').execSync(cmd, { input: password });
+    console.log();
+    await tempMsg(`Entry saved: ${c.bold}${label}${c.reset} — password copied to clipboard.`, 1800);
+  } catch {
+    console.log();
+    await tempMsg(`Entry saved: ${c.bold}${label}${c.reset}`, 1500);
+  }
   console.log();
 }
 
@@ -600,6 +756,140 @@ function shellDelete(label) {
   SESSION.data.entries = SESSION.data.entries.filter(e => e.id !== entry.id);
   persist();
   console.log(); ok(`Deleted: ${entry.label}`); console.log();
+}
+
+// update <label> <password|mode>
+// update Netflix strong
+// update Netflix pass:myNewPassword123
+// update Netflix standard
+async function shellUpdate(arg) {
+  requireSession();
+  if (!arg) {
+    fail('Usage: update <label> <mode|pass:password>');
+    info('  Examples:');
+    info('    update Netflix strong');
+    info('    update Netflix pass:myNewPassword123');
+    info('    update Netflix standard');
+    return;
+  }
+
+  const parts    = arg.trim().split(/\s+/);
+  const label    = parts[0];
+  const pwdArg   = parts.slice(1).join(' ');
+  const modeKeys = [...Object.keys(MODES), 'words'];
+
+  const entry = findEntry(label);
+  if (!entry) { fail(`No entry found: "${label}"`); return; }
+
+  if (!pwdArg) {
+    fail('Specify a mode or pass:password. Example: update Netflix strong');
+    return;
+  }
+
+  let newPassword;
+  if (pwdArg.startsWith('pass:')) {
+    // direct password
+    newPassword = pwdArg.slice(5);
+    if (!newPassword) { fail('Password cannot be empty after pass:'); return; }
+  } else if (modeKeys.includes(pwdArg.toLowerCase())) {
+    // generate with mode
+    newPassword = generatePassword(pwdArg.toLowerCase());
+  } else {
+    fail(`Unknown mode: "${pwdArg}". Use a mode (standard/strong/simple/pin/pin8/words) or pass:yourpassword`);
+    return;
+  }
+
+  const old = entry.password;
+  entry.password   = newPassword;
+  entry.updated_at = new Date().toISOString();
+  persist();
+
+  // copy to clipboard
+  try {
+    const cmd = process.platform === 'darwin' ? 'pbcopy'
+              : process.platform === 'win32'  ? 'clip'
+              : 'xclip -selection clipboard';
+    require('child_process').execSync(cmd, { input: newPassword });
+    console.log();
+    ok(`Password updated: ${c.bold}${entry.label}${c.reset} — new password copied to clipboard.`);
+  } catch {
+    console.log();
+    ok(`Password updated: ${c.bold}${entry.label}${c.reset}`);
+  }
+  console.log();
+}
+
+// rename <old-label> <new-label>
+function shellRename(arg) {
+  requireSession();
+  const parts = arg?.trim().split(/\s+/) || [];
+  if (parts.length < 2) {
+    fail('Usage: rename <label> <new-label>');
+    info('  Example: rename Netflix NetflixUS');
+    return;
+  }
+  const [label, ...rest] = parts;
+  const newLabel = rest.join(' ');
+  const entry    = findEntry(label);
+  if (!entry) { fail(`No entry found: "${label}"`); return; }
+
+  // check for duplicate
+  const exists = (SESSION.data.entries || []).find(e =>
+    e.id !== entry.id && e.label.toLowerCase() === newLabel.toLowerCase()
+  );
+  if (exists) { fail(`An entry named "${newLabel}" already exists.`); return; }
+
+  const old        = entry.label;
+  entry.label      = newLabel;
+  entry.updated_at = new Date().toISOString();
+  persist();
+
+  console.log();
+  ok(`Renamed: ${c.dim}${old}${c.reset} → ${c.bold}${newLabel}${c.reset}`);
+  console.log();
+}
+
+// note <label> [text]
+// note Netflix                 — view notes
+// note Netflix "my note here"  — set notes
+async function shellNote(arg) {
+  requireSession();
+  if (!arg) { fail('Usage: note <label> [text]'); return; }
+
+  const spaceIdx = arg.indexOf(' ');
+  const label    = spaceIdx === -1 ? arg : arg.slice(0, spaceIdx);
+  const noteText = spaceIdx === -1 ? null : arg.slice(spaceIdx + 1).trim();
+
+  const entry = findEntry(label);
+  if (!entry) { fail(`No entry found: "${label}"`); return; }
+
+  if (!noteText) {
+    // view
+    console.log();
+    console.log(line());
+    console.log(`  ${c.bold}${entry.label}${c.reset}  ${c.dim}notes${c.reset}`);
+    console.log(line());
+    if (entry.notes) {
+      console.log(`  ${entry.notes}`);
+    } else {
+      info('  no notes.');
+    }
+    console.log(line());
+    console.log();
+  } else {
+    // set
+    entry.notes      = noteText;
+    entry.updated_at = new Date().toISOString();
+    persist();
+    console.log();
+    ok(`Note saved: ${c.bold}${entry.label}${c.reset}`);
+    console.log();
+  }
+}
+
+// copy — alias for get
+function shellCopy(label) {
+  shellGet(label);
 }
 
 function shellSearch(query) {
@@ -648,18 +938,32 @@ function shellHelp() {
   console.log(line());
   console.log(`  ${c.bold}Commands${c.reset}`);
   console.log(line());
-  console.log(`  ${c.green}list${c.reset} [category]    list all entries`);
-  console.log(`  ${c.green}get${c.reset}  <label>       copy password to clipboard`);
-  console.log(`  ${c.green}show${c.reset} <label>       reveal full entry`);
-  console.log(`  ${c.green}add${c.reset}                add a new entry`);
-  console.log(`  ${c.green}edit${c.reset} <label>       edit an entry`);
-  console.log(`  ${c.green}delete${c.reset} <label>     delete an entry`);
-  console.log(`  ${c.green}search${c.reset} <query>     search entries`);
-  console.log(`  ${c.green}dashboard${c.reset}          vault overview`);
-  console.log(`  ${c.green}info${c.reset}               vault stats`);
-  console.log(`  ${c.green}cls${c.reset}                clear screen`);
-  console.log(`  ${c.green}lock${c.reset}               lock vault and exit`);
-  console.log(`  ${c.green}help${c.reset}               show this`);
+  console.log(`  ${c.dim}── read ─────────────────────────────────${c.reset}`);
+  console.log(`  ${c.green}list${c.reset} [category]              list all entries`);
+  console.log(`  ${c.green}get${c.reset}  <label>                 copy password to clipboard`);
+  console.log(`  ${c.green}copy${c.reset} <label>                 alias for get`);
+  console.log(`  ${c.green}show${c.reset} <label>                 reveal full entry`);
+  console.log(`  ${c.green}note${c.reset} <label>                 view notes on entry`);
+  console.log(`  ${c.green}search${c.reset} <query>               search entries`);
+  console.log();
+  console.log(`  ${c.dim}── write ────────────────────────────────${c.reset}`);
+  console.log(`  ${c.green}add${c.reset}                          add entry interactively`);
+  console.log(`  ${c.green}add${c.reset} "<label> [email] [mode]" quick add, password generated`);
+  console.log(`  ${c.green}edit${c.reset} <label>                 edit full entry`);
+  console.log(`  ${c.green}update${c.reset} <label> <mode>        update password by mode`);
+  console.log(`  ${c.green}update${c.reset} <label> pass:<pwd>    update with exact password`);
+  console.log(`  ${c.green}rename${c.reset} <label> <new-label>   rename an entry`);
+  console.log(`  ${c.green}note${c.reset} <label> <text>          set notes on entry`);
+  console.log(`  ${c.green}delete${c.reset} <label>               delete an entry`);
+  console.log();
+  console.log(`  ${c.dim}── vault ────────────────────────────────${c.reset}`);
+  console.log(`  ${c.green}dashboard${c.reset}                    vault overview`);
+  console.log(`  ${c.green}info${c.reset}                         vault stats`);
+  console.log(`  ${c.green}cls${c.reset}                          clear screen`);
+  console.log(`  ${c.green}lock${c.reset}                         lock vault and exit`);
+  console.log(`  ${c.green}help${c.reset}                         show this`);
+  console.log(line());
+  console.log(`  ${c.dim}Password modes: standard · strong · simple · pin · pin8 · words${c.reset}`);
   console.log(line());
   console.log();
 }
