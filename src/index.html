@@ -3,949 +3,498 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CryptHub</title>
+<meta name="description" content="CryptHub — A local-first, encrypted password manager. Your vault never leaves your device."/>
+<meta property="og:title" content="CryptHub — Local Password Manager"/>
+<meta property="og:description" content="AES-256-GCM encrypted. No cloud. No accounts. No compromise."/>
+<meta property="og:url" content="https://crypthub.srsdevdesign.com"/>
+<title>CryptHub — Your Vault. Your Device.</title>
+<link rel="icon" href="favicon.ico"/>
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg:      '#0d0d0f',
+          surface: '#131316',
+          border:  '#1e1e24',
+          border2: '#2a2a34',
+          accent:  '#00e5a0',
+          accent2: '#00b87a',
+          muted:   '#5a5a72',
+          muted2:  '#3a3a4a',
+          txt:     '#e8e8f0',
+        },
+        fontFamily: {
+          mono: ['JetBrains Mono', 'monospace'],
+          ui:   ['Syne', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
 <style>
-  :root {
-    --bg:        #0d0d0f;
-    --surface:   #131316;
-    --border:    #1e1e24;
-    --border2:   #2a2a34;
-    --accent:    #00e5a0;
-    --accent2:   #00b87a;
-    --danger:    #ff4a6e;
-    --warn:      #f5a623;
-    --text:      #e8e8f0;
-    --muted:     #5a5a72;
-    --muted2:    #3a3a4a;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-ui:   'Syne', sans-serif;
-  }
+  html { scroll-behavior: smooth; }
+  body { background: #0d0d0f; color: #e8e8f0; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    height: 100vh;
-    overflow: hidden;
-    -webkit-app-region: drag;
-  }
-
-  button, input, select, textarea {
-    -webkit-app-region: no-drag;
-    font-family: var(--font-mono);
-  }
-
-  /* ── LOCK SCREEN ───────────────────────────────────────── */
-  #lock-screen {
-    position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--bg);
-    z-index: 100;
-    animation: fadeIn .4s ease;
-  }
-  #lock-screen.hidden { display: none; }
-
-  .lock-card {
-    width: 380px;
-    padding: 48px 40px;
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    background: var(--surface);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .lock-card::before {
+  body::before {
     content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  }
-
-  .lock-logo {
-    font-family: var(--font-ui);
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 4px;
-  }
-  .lock-logo span { color: var(--accent); }
-
-  .lock-subtitle {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 40px;
-  }
-
-  .lock-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-align: left;
-    margin-bottom: 8px;
-    display: block;
-  }
-
-  .lock-input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 14px 16px;
-    color: var(--text);
-    font-size: 15px;
-    letter-spacing: 3px;
-    outline: none;
-    transition: border-color .2s;
-    -webkit-app-region: no-drag;
-  }
-  .lock-input:focus { border-color: var(--accent); }
-
-  .lock-btn {
-    margin-top: 20px;
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity .2s, transform .1s;
-  }
-  .lock-btn:hover { opacity: .9; }
-  .lock-btn:active { transform: scale(.98); }
-
-  .lock-error {
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--danger);
-    min-height: 18px;
-  }
-
-  /* ── MAIN APP ───────────────────────────────────────────── */
-  #app {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    grid-template-rows: 52px 1fr;
-    height: 100vh;
-  }
-  #app.hidden { display: none; }
-
-  /* ── TITLEBAR ─────────────────────────────────────────── */
-  #titlebar {
-    grid-column: 1 / -1;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 16px;
-    -webkit-app-region: drag;
-    padding-left: 80px; /* space for traffic lights */
-  }
-
-  .titlebar-right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    -webkit-app-region: no-drag;
-  }
-
-  .icon-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    transition: color .2s, background .2s;
-    font-size: 18px;
-  }
-  .icon-btn:hover { color: var(--text); background: var(--border); }
-
-  /* ── SIDEBAR LOGO ─────────────────────────────────────── */
-  .sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 18px 16px 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-logo-text {
-    font-family: var(--font-ui);
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
-  .sidebar-logo-text em {
-    font-style: normal;
-    color: var(--accent);
-  }
-
-  /* ── SIDEBAR ──────────────────────────────────────────── */
-  #sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .sidebar-search {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .search-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 8px 12px;
-  }
-  .search-wrap svg { color: var(--muted); flex-shrink: 0; }
-
-  #search-input {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-size: 13px;
-    width: 100%;
-  }
-  #search-input::placeholder { color: var(--muted); }
-
-  .sidebar-cats {
-    padding: 12px 8px 8px;
-  }
-  .cat-label {
-    font-size: 9px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 0 8px;
-    margin-bottom: 6px;
-  }
-
-  .cat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 7px;
-    cursor: pointer;
-    font-size: 12px;
-    color: var(--muted);
-    transition: background .15s, color .15s;
-    -webkit-app-region: no-drag;
-  }
-  .cat-item:hover { background: var(--border); color: var(--text); }
-  .cat-item.active { background: rgba(0,229,160,.1); color: var(--accent); }
-  .cat-item .cat-count {
-    margin-left: auto;
-    font-size: 10px;
-    background: var(--border2);
-    padding: 1px 6px;
-    border-radius: 10px;
-  }
-  .cat-item.active .cat-count {
-    background: rgba(0,229,160,.2);
-  }
-
-  .sidebar-bottom {
-    margin-top: auto;
-    padding: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .add-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity .2s;
-    -webkit-app-region: no-drag;
-  }
-  .add-btn:hover { opacity: .85; }
-
-  /* ── MAIN CONTENT ─────────────────────────────────────── */
-  #main {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: var(--bg);
-  }
-
-  .main-header {
-    padding: 20px 28px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .main-title {
-    font-family: var(--font-ui);
-    font-size: 22px;
-    font-weight: 700;
-  }
-
-  .entry-count {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-
-  #entry-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 12px;
-    align-content: start;
-  }
-
-  #entry-list::-webkit-scrollbar { width: 4px; }
-  #entry-list::-webkit-scrollbar-track { background: transparent; }
-  #entry-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-  .entry-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-    cursor: pointer;
-    transition: border-color .2s, transform .15s;
-    position: relative;
-    overflow: hidden;
-    -webkit-app-region: no-drag;
-  }
-  .entry-card:hover { border-color: var(--border2); transform: translateY(-1px); }
-  .entry-card.selected { border-color: var(--accent); }
-  .entry-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,229,160,.3), transparent);
-    opacity: 0;
-    transition: opacity .2s;
-  }
-  .entry-card:hover::after, .entry-card.selected::after { opacity: 1; }
-
-  .card-cat {
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent2);
-    margin-bottom: 8px;
-  }
-  .card-label {
-    font-family: var(--font-ui);
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .card-user {
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 14px;
-    min-height: 16px;
-  }
-
-  .card-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .card-action {
-    flex: 1;
-    padding: 7px;
-    background: var(--border);
-    border: none;
-    border-radius: 6px;
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: background .15s, color .15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-  }
-  .card-action:hover { background: var(--border2); color: var(--text); }
-  .card-action.copy-ok { color: var(--accent); }
-  .card-action.danger:hover { background: rgba(255,74,110,.15); color: var(--danger); }
-
-  .empty-state {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 20px;
-    color: var(--muted);
-    gap: 16px;
-  }
-  .empty-state svg { opacity: .3; }
-  .empty-state p { font-size: 13px; letter-spacing: 1px; }
-
-  /* ── MODAL ────────────────────────────────────────────── */
-  .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,.7);
-    backdrop-filter: blur(4px);
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn .2s ease;
-    -webkit-app-region: no-drag;
-  }
-  .modal-overlay.hidden { display: none; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    width: 460px;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 32px;
-    position: relative;
-  }
-
-  .modal-title {
-    font-family: var(--font-ui);
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 22px;
-    line-height: 1;
-    padding: 4px;
-    border-radius: 4px;
-    transition: color .15s;
-  }
-  .modal-close:hover { color: var(--text); }
-
-  .form-group {
-    margin-bottom: 18px;
-  }
-
-  .form-label {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .form-input, .form-select, .form-textarea {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    transition: border-color .2s;
-    font-family: var(--font-mono);
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: var(--accent);
-  }
-  .form-textarea { resize: vertical; min-height: 80px; }
-  .form-select { appearance: none; cursor: pointer; }
-
-  .pwd-row {
-    display: flex;
-    gap: 8px;
-  }
-  .pwd-row .form-input { flex: 1; letter-spacing: 2px; }
-
-  .gen-btn {
-    padding: 12px 14px;
-    background: var(--border2);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 13px;
-    white-space: nowrap;
-    transition: all .15s;
-    font-family: var(--font-mono);
-  }
-  .gen-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
-  }
-
-  .btn-primary {
-    flex: 1;
-    padding: 13px;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity .2s;
-    font-family: var(--font-mono);
-  }
-  .btn-primary:hover { opacity: .85; }
-
-  .btn-secondary {
-    padding: 13px 20px;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all .15s;
-    font-family: var(--font-mono);
-  }
-  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
-
-  /* ── TOAST ───────────────────────────────────────────── */
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 12px;
-    letter-spacing: 1px;
-    z-index: 200;
-    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    background-image:
+      linear-gradient(rgba(0,229,160,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,.025) 1px, transparent 1px);
+    background-size: 48px 48px;
     pointer-events: none;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-  #toast.success { border-color: var(--accent); color: var(--accent); }
-  #toast.error   { border-color: var(--danger); color: var(--danger); }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    z-index: 0;
   }
 
-  .migrate-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 9px;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all .2s;
-    margin-top: 8px;
-    -webkit-app-region: no-drag;
-    font-family: var(--font-mono);
-  }
-  .migrate-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* ── MIGRATION MODAL ──────────────────────────────────── */
-  .migrate-tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 24px;
-    background: var(--bg);
-    border-radius: 10px;
-    padding: 4px;
-  }
-  .migrate-tab {
-    flex: 1;
-    padding: 9px;
-    background: none;
-    border: none;
-    border-radius: 7px;
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all .15s;
-    font-family: var(--font-mono);
-  }
-  .migrate-tab.active { background: var(--surface); color: var(--text); }
-
-  .migrate-panel { display: none; }
-  .migrate-panel.active { display: block; }
-
-  .migrate-info {
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 20px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-  .migrate-info strong { color: var(--text); }
-
-  .migrate-warn {
-    background: rgba(255,74,110,.08);
-    border: 1px solid rgba(255,74,110,.25);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 20px;
-    font-size: 12px;
-    color: #ff8fa3;
-    line-height: 1.7;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  .migrate-warn svg { flex-shrink: 0; margin-top: 1px; }
-
-  .migrate-success {
-    text-align: center;
-    padding: 20px 0;
-  }
-  .migrate-success .big-check {
-    font-size: 48px;
-    margin-bottom: 12px;
-  }
-  .migrate-success h3 {
-    font-family: var(--font-ui);
-    font-size: 18px;
-    margin-bottom: 8px;
-    color: var(--accent);
-  }
-  .migrate-success p {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
+  .nav-scrolled {
+    border-bottom-color: #1e1e24 !important;
+    background: rgba(13,13,15,.92) !important;
+    backdrop-filter: blur(12px);
   }
 
-  .import-step { display: none; }
-  .import-step.active { display: block; }
-  .strength-bar {
-    display: flex;
-    gap: 3px;
-    margin-top: 8px;
-  }
-  .strength-seg {
-    flex: 1;
-    height: 3px;
-    background: var(--border2);
-    border-radius: 2px;
-    transition: background .3s;
-  }
-  .strength-seg.s1 { background: var(--danger); }
-  .strength-seg.s2 { background: var(--warn); }
-  .strength-seg.s3 { background: #a8e063; }
-  .strength-seg.s4 { background: var(--accent); }
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 
-  .strength-label {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 4px;
-    letter-spacing: 1px;
-  }
+  .glow-card { transition: border-color .2s, box-shadow .2s; }
+  .glow-card:hover { border-color: rgba(0,229,160,.25) !important; box-shadow: 0 0 20px rgba(0,229,160,.05); }
+
+  .top-accent::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #00e5a0, transparent); }
+
+  #mobile-menu { display: none; }
+  #mobile-menu.open { display: flex; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0d0d0f; }
+  ::-webkit-scrollbar-thumb { background: #2a2a34; border-radius: 4px; }
 </style>
 </head>
-<body>
+<body class="relative">
 
-<!-- LOCK SCREEN -->
-<div id="lock-screen">
-  <div class="lock-card">
-    <div class="lock-logo">Crypt<span>Hub</span></div>
-    <div class="lock-subtitle">Secure Password Vault</div>
-    <label class="lock-label" id="lock-label-text">Master Password</label>
-    <input type="password" class="lock-input" id="lock-input" placeholder="••••••••••••" autocomplete="off"/>
-    <button class="lock-btn" id="lock-btn">Unlock</button>
-    <div class="lock-error" id="lock-error"></div>
+<!-- ── NAV ─────────────────────────────────────────────────── -->
+<nav id="nav" class="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-5 flex items-center justify-between border-b border-transparent transition-all duration-300">
+  <a href="#" class="font-ui font-extrabold text-lg tracking-tight flex items-center gap-2 text-txt no-underline">
+    <svg width="22" height="22" viewBox="0 0 40 41" fill="none"><path d="M0 0L30.7273 0L40 9.45455L9.27273 9.45455L0 0Z" fill="#00E5A0"/><path d="M40 31.4545L9.27273 31.4545L9.27273 9.45455L0 0L0 40.9091L30.9091 40.9091L40 31.4545Z" fill="#00E5A0"/></svg>
+    Crypt<span class="text-accent">Hub</span>
+  </a>
+  <div class="hidden md:flex items-center gap-8">
+    <a href="#features" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt transition-colors">Features</a>
+    <a href="#security" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt transition-colors">Security</a>
+    <a href="#how-it-works" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt transition-colors">How it works</a>
+    <a href="#transparency" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt transition-colors">Privacy</a>
+    <a href="https://github.com/srsdesigndev/crypthub" target="_blank" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt transition-colors">GitHub</a>
+    <a href="crypthub.html" class="px-5 py-2.5 bg-accent text-black text-[11px] font-bold tracking-[1.5px] uppercase rounded-lg hover:opacity-85 transition-opacity">Launch App →</a>
   </div>
+  <button class="md:hidden text-muted hover:text-txt" onclick="toggleMenu()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</nav>
+
+<div id="mobile-menu" class="fixed top-[65px] left-0 right-0 z-40 flex-col bg-surface border-b border-border px-6 py-5 gap-4 md:hidden">
+  <a href="#features" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt" onclick="toggleMenu()">Features</a>
+  <a href="#security" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt" onclick="toggleMenu()">Security</a>
+  <a href="#how-it-works" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt" onclick="toggleMenu()">How it works</a>
+  <a href="#transparency" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt" onclick="toggleMenu()">Privacy</a>
+  <a href="https://github.com/srsdesigndev/crypthub" target="_blank" class="text-[11px] tracking-[2px] uppercase text-muted hover:text-txt">GitHub</a>
+  <a href="crypthub.html" class="mt-1 px-5 py-2.5 bg-accent text-black text-[11px] font-bold tracking-[1.5px] uppercase rounded-lg text-center">Launch App →</a>
 </div>
 
-<!-- MAIN APP -->
-<div id="app" class="hidden">
-
-  <!-- TITLEBAR -->
-  <div id="titlebar">
-    <div class="titlebar-right">
-      <button class="icon-btn" id="lock-app-btn" title="Lock">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </button>
-    </div>
+<!-- ── HERO ─────────────────────────────────────────────────── -->
+<section id="hero" class="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 pb-20">
+  <div class="inline-flex items-center gap-2 px-4 py-1.5 border border-accent/30 rounded-full text-[10px] tracking-[2px] uppercase text-accent mb-8">
+    <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+    Open Source · Local First · No Cloud
   </div>
 
-  <!-- SIDEBAR -->
-  <div id="sidebar">
-    <div class="sidebar-logo">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-        <path d="M2 17l10 5 10-5"/>
-        <path d="M2 12l10 5 10-5"/>
-      </svg>
-      <span class="sidebar-logo-text">Crypt<em>Hub</em></span>
-    </div>
-    <div class="sidebar-search">
-      <div class="search-wrap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="search-input" placeholder="Search..."/>
-      </div>
-    </div>
-    <div class="sidebar-cats">
-      <div class="cat-label">Categories</div>
-      <div id="cat-list"></div>
-    </div>
-    <div class="sidebar-bottom">
-      <button class="add-btn" id="add-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        New Entry
-      </button>
-      <button class="migrate-btn" id="migrate-btn">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
-          <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
-        </svg>
-        Migrate Vault
-      </button>
-    </div>
+  <h1 class="font-ui font-black text-[clamp(48px,8vw,90px)] leading-[.92] tracking-[-3px] mb-6">
+    Your Vault.<br/>
+    <span class="text-accent">Your Device.</span>
+  </h1>
+
+  <p class="text-[clamp(13px,1.8vw,16px)] text-muted max-w-lg leading-relaxed mb-10">
+    CryptHub is a <span class="text-txt font-medium">local-first password manager</span> that encrypts everything with AES-256-GCM.
+    No cloud. No accounts. No telemetry. <span class="text-txt font-medium">Your passwords never leave your device.</span>
+  </p>
+
+  <div class="flex flex-wrap gap-4 justify-center mb-16">
+    <a href="crypthub.html" class="inline-flex items-center gap-2.5 px-7 py-4 bg-accent text-black font-bold text-[12px] tracking-[1.5px] uppercase rounded-xl hover:opacity-85 transition-all hover:-translate-y-0.5">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Launch Web App
+    </a>
+    <a href="https://github.com/srsdesigndev/crypthub" target="_blank" class="inline-flex items-center gap-2.5 px-7 py-4 border border-border2 text-muted font-medium text-[12px] tracking-[1.5px] uppercase rounded-xl hover:border-txt hover:text-txt transition-all hover:-translate-y-0.5">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+      View on GitHub
+    </a>
   </div>
 
-  <!-- MAIN -->
-  <div id="main">
-    <div class="main-header">
-      <div class="main-title" id="main-title">All Passwords</div>
-      <div class="entry-count" id="entry-count"></div>
-    </div>
-    <div id="entry-list"></div>
+  <!-- Stats -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border rounded-2xl overflow-hidden max-w-2xl w-full">
+    <div class="bg-bg px-6 py-5 text-center"><div class="font-ui font-black text-2xl text-accent tracking-tight">256</div><div class="text-[10px] text-muted tracking-[1px] mt-1">BIT KEY</div></div>
+    <div class="bg-bg px-6 py-5 text-center"><div class="font-ui font-black text-2xl text-accent tracking-tight">GCM</div><div class="text-[10px] text-muted tracking-[1px] mt-1">AUTH MODE</div></div>
+    <div class="bg-bg px-6 py-5 text-center"><div class="font-ui font-black text-2xl text-accent tracking-tight">0</div><div class="text-[10px] text-muted tracking-[1px] mt-1">CLOUD BYTES</div></div>
+    <div class="bg-bg px-6 py-5 text-center"><div class="font-ui font-black text-2xl text-accent tracking-tight">MIT</div><div class="text-[10px] text-muted tracking-[1px] mt-1">LICENSE</div></div>
   </div>
-</div>
 
-<!-- ADD/EDIT MODAL -->
-<div class="modal-overlay hidden" id="entry-modal">
-  <div class="modal">
-    <div class="modal-title">
-      <span id="modal-title-text">New Entry</span>
-      <button class="modal-close" id="modal-close">×</button>
-    </div>
-    <input type="hidden" id="edit-id"/>
-    <div class="form-group">
-      <label class="form-label">Label *</label>
-      <input type="text" class="form-input" id="f-label" placeholder="e.g. GitHub, Netflix..."/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Username / Email</label>
-      <input type="text" class="form-input" id="f-user" placeholder="user@example.com"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password *</label>
-      <div class="pwd-row">
-        <input type="text" class="form-input" id="f-pwd" placeholder="Enter or generate..."/>
-        <button class="gen-btn" id="gen-btn">⚡ Generate</button>
-      </div>
-      <div class="strength-bar">
-        <div class="strength-seg" id="s1"></div>
-        <div class="strength-seg" id="s2"></div>
-        <div class="strength-seg" id="s3"></div>
-        <div class="strength-seg" id="s4"></div>
-      </div>
-      <div class="strength-label" id="strength-label"></div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Category</label>
-      <select class="form-select" id="f-cat">
-        <option>General</option>
-        <option>Social</option>
-        <option>Work</option>
-        <option>Finance</option>
-        <option>Entertainment</option>
-        <option>Dev / Tech</option>
-        <option>Shopping</option>
-        <option>Other</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Notes</label>
-      <textarea class="form-textarea" id="f-notes" placeholder="Optional notes..."></textarea>
-    </div>
-    <div class="form-actions">
-      <button class="btn-secondary" id="modal-cancel">Cancel</button>
-      <button class="btn-primary" id="modal-save">Save Entry</button>
-    </div>
-  </div>
-</div>
+  <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-[radial-gradient(ellipse,rgba(0,229,160,.08)_0%,transparent_70%)] pointer-events-none"></div>
+</section>
 
-<!-- MIGRATION MODAL -->
-<div class="modal-overlay hidden" id="migrate-modal">
-  <div class="modal" style="width:500px">
-    <div class="modal-title">
-      <span>Vault Migration</span>
-      <button class="modal-close" id="migrate-modal-close">×</button>
-    </div>
+<!-- ── FEATURES ─────────────────────────────────────────────── -->
+<section id="features" class="relative z-10 px-6 py-24 border-t border-border">
+  <div class="max-w-5xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-4">Why CryptHub</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(28px,4vw,48px)] tracking-tight leading-tight mb-4">Everything you need.<br/>Nothing you don't.</h2>
+    <p class="reveal text-[13px] text-muted leading-relaxed max-w-md mb-16">Built for people who want full control over their passwords without handing them to a third party.</p>
 
-    <!-- Tabs -->
-    <div class="migrate-tabs">
-      <button class="migrate-tab active" data-tab="export">
-        ↑ Export
-      </button>
-      <button class="migrate-tab" data-tab="import">
-        ↓ Import
-      </button>
-    </div>
-
-    <!-- EXPORT PANEL -->
-    <div class="migrate-panel active" id="panel-export">
-      <div class="migrate-info">
-        <strong>How export works:</strong><br/>
-        Creates a single encrypted <code>.crypthub</code> file containing all your passwords.
-        The file is signed with your master password using AES-256-GCM — it cannot be read
-        without your master password on any machine.
-      </div>
-      <div class="migrate-warn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        Keep this file somewhere safe. Anyone with this file AND your master password can restore your vault.
-      </div>
-      <div class="form-actions">
-        <button class="btn-secondary" id="export-cancel">Cancel</button>
-        <button class="btn-primary" id="export-confirm">
-          Export Vault →
-        </button>
-      </div>
-    </div>
-
-    <!-- IMPORT PANEL -->
-    <div class="migrate-panel" id="panel-import">
-
-      <!-- Step 1: Info + pick file -->
-      <div class="import-step active" id="import-step-1">
-        <div class="migrate-info">
-          <strong>How import works:</strong><br/>
-          Select a <code>.crypthub</code> backup file, enter your master password to verify,
-          and CryptHub will restore your vault. <strong>This will completely replace
-          your current data</strong> — one vault, one session.
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border border border-border rounded-2xl overflow-hidden">
+      <div class="reveal bg-bg p-8 glow-card border border-transparent">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         </div>
-        <div class="migrate-warn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          Your current vault will be <strong>permanently erased</strong> and replaced with the imported data.
-        </div>
-        <div class="form-actions">
-          <button class="btn-secondary" id="import-cancel-1">Cancel</button>
-          <button class="btn-primary" id="import-pick-file">Select .crypthub File →</button>
-        </div>
+        <div class="font-ui font-bold text-[15px] mb-2">AES-256-GCM Encryption</div>
+        <div class="text-[12px] text-muted leading-relaxed">Every password is individually encrypted with a random IV before storage. Authenticated encryption that detects tampering.</div>
       </div>
-
-      <!-- Step 2: Enter master password -->
-      <div class="import-step" id="import-step-2">
-        <div class="migrate-info" style="margin-bottom:20px">
-          <strong>Vault file loaded.</strong> Enter the master password that was used
-          to protect this vault to verify your identity and decrypt.
+      <div class="reveal bg-bg p-8 glow-card border border-transparent">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         </div>
-        <div class="form-group">
-          <label class="form-label">Master Password</label>
-          <input type="password" class="form-input" id="import-pwd" placeholder="Enter master password..." autocomplete="off"/>
-        </div>
-        <div class="lock-error" id="import-error" style="margin-bottom:12px"></div>
-        <div class="form-actions">
-          <button class="btn-secondary" id="import-cancel-2">Back</button>
-          <button class="btn-primary" id="import-verify">Verify & Restore Vault</button>
-        </div>
+        <div class="font-ui font-bold text-[15px] mb-2">Local-Only Storage</div>
+        <div class="text-[12px] text-muted leading-relaxed">Your data lives in your browser's IndexedDB. No internet connection required — ever. Zero server-side storage.</div>
       </div>
-
-      <!-- Step 3: Success -->
-      <div class="import-step" id="import-step-3">
-        <div class="migrate-success">
-          <div class="big-check">✓</div>
-          <h3>Vault Restored</h3>
-          <p id="import-success-msg"></p>
+      <div class="reveal bg-bg p-8 glow-card border border-transparent">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div class="form-actions" style="margin-top:24px">
-          <button class="btn-primary" id="import-done">Done</button>
-        </div>
+        <div class="font-ui font-bold text-[15px] mb-2">Master Password Auth</div>
+        <div class="text-[12px] text-muted leading-relaxed">Your master password is never stored. Only a PBKDF2-derived hash with a random salt. Session key lives in memory only.</div>
       </div>
-
+      <div class="reveal bg-bg p-8 glow-card border border-transparent">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+        </div>
+        <div class="font-ui font-bold text-[15px] mb-2">Vault Migration</div>
+        <div class="text-[12px] text-muted leading-relaxed">Export your entire vault as a signed, encrypted <code class="text-accent2 text-[11px]">.crypthub</code> file. Import on any device with your master password.</div>
+      </div>
+      <div class="reveal bg-bg p-8 glow-card border border-transparent">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <div class="font-ui font-bold text-[15px] mb-2">Password Generator</div>
+        <div class="text-[12px] text-muted leading-relaxed">Cryptographically random passwords with configurable length and character sets. Built-in strength meter.</div>
+      </div>
+      <div class="reveal bg-bg p-8 glow-card border border-transparent">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="font-ui font-bold text-[15px] mb-2">Search & Categories</div>
+        <div class="text-[12px] text-muted leading-relaxed">Instantly filter by label, username, or category. Organise into Social, Work, Finance, Dev, and more.</div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- TOAST -->
-<div id="toast"></div>
+<!-- ── HOW IT WORKS ──────────────────────────────────────────── -->
+<section id="how-it-works" class="relative z-10 px-6 py-24 border-t border-border bg-surface">
+  <div class="max-w-5xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-4">How It Works</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(28px,4vw,48px)] tracking-tight leading-tight mb-4">Simple. Private. Yours.</h2>
+    <p class="reveal text-[13px] text-muted leading-relaxed max-w-md mb-16">No accounts to create. No emails to verify. Just open the app and start.</p>
 
-<script src="renderer.js"></script>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="reveal relative bg-bg border border-border2 rounded-2xl p-7 glow-card border-transparent top-accent">
+        <div class="text-[10px] tracking-[2px] text-accent uppercase mb-4">Step 01</div>
+        <div class="font-ui font-bold text-[16px] mb-3">Set a Master Password</div>
+        <div class="text-[12px] text-muted leading-relaxed">Choose a strong master password. It's never stored — only used to derive your encryption key via PBKDF2 (310,000 iterations).</div>
+      </div>
+      <div class="reveal relative bg-bg border border-border2 rounded-2xl p-7 glow-card border-transparent top-accent">
+        <div class="text-[10px] tracking-[2px] text-accent uppercase mb-4">Step 02</div>
+        <div class="font-ui font-bold text-[16px] mb-3">Add Your Passwords</div>
+        <div class="text-[12px] text-muted leading-relaxed">Create entries with labels, usernames, passwords, and categories. Use the built-in generator to create strong passwords instantly.</div>
+      </div>
+      <div class="reveal relative bg-bg border border-border2 rounded-2xl p-7 glow-card border-transparent top-accent">
+        <div class="text-[10px] tracking-[2px] text-accent uppercase mb-4">Step 03</div>
+        <div class="font-ui font-bold text-[16px] mb-3">Access Anywhere</div>
+        <div class="text-[12px] text-muted leading-relaxed">Export your vault as a <code class="text-accent2">.crypthub</code> file and import it on any device or browser. Your data travels with you — fully encrypted.</div>
+      </div>
+    </div>
+
+    <!-- Migration flow -->
+    <div class="reveal bg-bg border border-border2 rounded-2xl p-8">
+      <div class="text-[10px] tracking-[2px] text-muted uppercase mb-6">Vault Migration Flow</div>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <div class="flex flex-col items-center text-center w-28">
+          <div class="w-12 h-12 rounded-xl bg-surface border border-border2 flex items-center justify-center text-2xl mb-3">🖥️</div>
+          <div class="font-ui font-bold text-[12px] mb-1">Your Browser</div>
+          <div class="text-[10px] text-muted">Unlock vault</div>
+        </div>
+        <div class="text-muted2 text-lg hidden sm:block">→</div>
+        <div class="flex flex-col items-center text-center w-28">
+          <div class="w-12 h-12 rounded-xl bg-surface border border-border2 flex items-center justify-center text-2xl mb-3">⚡</div>
+          <div class="font-ui font-bold text-[12px] mb-1">Export</div>
+          <div class="text-[10px] text-muted">Migrate Vault</div>
+        </div>
+        <div class="text-muted2 text-lg hidden sm:block">→</div>
+        <div class="flex flex-col items-center text-center w-28">
+          <div class="w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 flex items-center justify-center text-2xl mb-3">🔐</div>
+          <div class="font-ui font-bold text-[12px] text-accent mb-1">vault.crypthub</div>
+          <div class="text-[10px] text-muted">Encrypted file</div>
+        </div>
+        <div class="text-muted2 text-lg hidden sm:block">→</div>
+        <div class="flex flex-col items-center text-center w-28">
+          <div class="w-12 h-12 rounded-xl bg-surface border border-border2 flex items-center justify-center text-2xl mb-3">⚡</div>
+          <div class="font-ui font-bold text-[12px] mb-1">Import</div>
+          <div class="text-[10px] text-muted">Verify password</div>
+        </div>
+        <div class="text-muted2 text-lg hidden sm:block">→</div>
+        <div class="flex flex-col items-center text-center w-28">
+          <div class="w-12 h-12 rounded-xl bg-surface border border-border2 flex items-center justify-center text-2xl mb-3">💻</div>
+          <div class="font-ui font-bold text-[12px] mb-1">Any Device</div>
+          <div class="text-[10px] text-muted">Vault restored</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECURITY ──────────────────────────────────────────────── -->
+<section id="security" class="relative z-10 px-6 py-24 border-t border-border">
+  <div class="max-w-5xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-4">Security Model</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(28px,4vw,48px)] tracking-tight leading-tight mb-4">Cryptography you<br/>can verify.</h2>
+    <p class="reveal text-[13px] text-muted leading-relaxed max-w-md mb-16">Open source. Read the code, audit it yourself, or run it locally. No black boxes.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="reveal flex gap-5 bg-surface border border-border2 rounded-2xl p-6 glow-card border-transparent">
+        <div class="w-9 h-9 rounded-full border border-border2 flex items-center justify-center text-[11px] text-accent flex-shrink-0 font-mono">01</div>
+        <div>
+          <div class="font-ui font-bold text-[14px] mb-2">Master Password → PBKDF2</div>
+          <div class="text-[12px] text-muted leading-relaxed mb-3">Never stored. Run through PBKDF2 (310,000 iterations) with a random 32-byte salt to produce a hash.</div>
+          <code class="block text-[10px] text-accent2 bg-bg border border-border2 rounded-lg px-3 py-2">PBKDF2(password, salt, 310000) → masterHash</code>
+        </div>
+      </div>
+      <div class="reveal flex gap-5 bg-surface border border-border2 rounded-2xl p-6 glow-card border-transparent">
+        <div class="w-9 h-9 rounded-full border border-border2 flex items-center justify-center text-[11px] text-accent flex-shrink-0 font-mono">02</div>
+        <div>
+          <div class="font-ui font-bold text-[14px] mb-2">Session Key in Memory Only</div>
+          <div class="text-[12px] text-muted leading-relaxed mb-3">256-bit key held in memory only — cleared immediately on lock or tab close. Never written to disk.</div>
+          <code class="block text-[10px] text-accent2 bg-bg border border-border2 rounded-lg px-3 py-2">PBKDF2(password, salt) → sessionKey</code>
+        </div>
+      </div>
+      <div class="reveal flex gap-5 bg-surface border border-border2 rounded-2xl p-6 glow-card border-transparent">
+        <div class="w-9 h-9 rounded-full border border-border2 flex items-center justify-center text-[11px] text-accent flex-shrink-0 font-mono">03</div>
+        <div>
+          <div class="font-ui font-bold text-[14px] mb-2">AES-256-GCM Per Entry</div>
+          <div class="text-[12px] text-muted leading-relaxed mb-3">Each password encrypted individually with a unique random IV. The GCM auth tag detects any tampering.</div>
+          <code class="block text-[10px] text-accent2 bg-bg border border-border2 rounded-lg px-3 py-2">AES-256-GCM(password, sessionKey, iv)</code>
+        </div>
+      </div>
+      <div class="reveal flex gap-5 bg-surface border border-border2 rounded-2xl p-6 glow-card border-transparent">
+        <div class="w-9 h-9 rounded-full border border-border2 flex items-center justify-center text-[11px] text-accent flex-shrink-0 font-mono">04</div>
+        <div>
+          <div class="font-ui font-bold text-[14px] mb-2">Export Signature Chain</div>
+          <div class="text-[12px] text-muted leading-relaxed mb-3">Two-layer key derivation chain for export files. Tamper with the file and auth tag verification fails on import.</div>
+          <code class="block text-[10px] text-accent2 bg-bg border border-border2 rounded-lg px-3 py-2">PBKDF2(masterHash, exportSalt) → exportKey</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal bg-surface border border-border2 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-border text-[10px] tracking-[2px] text-muted uppercase">Security Summary</div>
+      <div class="divide-y divide-border">
+        <div class="grid grid-cols-1 sm:grid-cols-2 px-6 py-3.5 text-[12px] gap-1"><span class="text-muted">Password hashing</span><span class="text-txt">PBKDF2 — 310,000 iterations, 32-byte salt</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 px-6 py-3.5 text-[12px] gap-1"><span class="text-muted">Vault encryption</span><span class="text-txt">AES-256-GCM, random IV per entry</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 px-6 py-3.5 text-[12px] gap-1"><span class="text-muted">Export file</span><span class="text-txt">AES-256-GCM, signed via PBKDF2 chain</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 px-6 py-3.5 text-[12px] gap-1"><span class="text-muted">Session key</span><span class="text-txt">In-memory only, never written to disk</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 px-6 py-3.5 text-[12px] gap-1"><span class="text-muted">Master password</span><span class="text-txt">Never stored — salted hash only</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 px-6 py-3.5 text-[12px] gap-1"><span class="text-muted">Tamper detection</span><span class="text-txt">GCM auth tag on every encrypted value</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRIVACY & DATA CONTROL ────────────────────────────────── -->
+<section id="transparency" class="relative z-10 px-6 py-24 border-t border-border bg-surface">
+  <div class="max-w-5xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-4">Transparency</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(28px,4vw,48px)] tracking-tight leading-tight mb-4">Privacy & Data Control</h2>
+    <p class="reveal text-[13px] text-muted leading-relaxed max-w-xl mb-16">We believe you have the right to know exactly what happens to your data. No fine print. No ambiguity.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div class="reveal bg-bg border border-border2 rounded-2xl p-7 glow-card border-transparent">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="font-ui font-bold text-[14px] text-accent">What stays on your device</div>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-accent flex-shrink-0">→</span>All passwords and vault entries</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-accent flex-shrink-0">→</span>Your master password (never transmitted)</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-accent flex-shrink-0">→</span>All encryption keys and session data</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-accent flex-shrink-0">→</span>Exported <code class="text-accent2">.crypthub</code> backup files</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-accent flex-shrink-0">→</span>All IndexedDB storage in your browser</li>
+        </ul>
+      </div>
+
+      <div class="reveal bg-bg border border-border2 rounded-2xl p-7 glow-card border-transparent">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff4a6e" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div class="font-ui font-bold text-[14px] text-red-400">What we never collect</div>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-red-400 flex-shrink-0">✕</span>No passwords or vault data</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-red-400 flex-shrink-0">✕</span>No account registration or email</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-red-400 flex-shrink-0">✕</span>No analytics or usage tracking</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-red-400 flex-shrink-0">✕</span>No cookies or third-party scripts</li>
+          <li class="flex gap-3 text-[12px] text-muted"><span class="text-red-400 flex-shrink-0">✕</span>No telemetry of any kind</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="reveal bg-bg border border-border2 rounded-2xl p-7 mb-6 glow-card border-transparent">
+      <div class="font-ui font-bold text-[15px] mb-5">Your Data Rights</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <div class="text-[11px] tracking-[1.5px] text-accent uppercase mb-2">Export</div>
+          <div class="text-[12px] text-muted leading-relaxed">Export your entire vault at any time as an encrypted <code class="text-accent2">.crypthub</code> file. You own it completely — no lock-in.</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-[1.5px] text-accent uppercase mb-2">Delete</div>
+          <div class="text-[12px] text-muted leading-relaxed">Clear all data via your browser's storage settings or the app's built-in clear vault option. Gone permanently.</div>
+        </div>
+        <div>
+          <div class="text-[11px] tracking-[1.5px] text-accent uppercase mb-2">Portability</div>
+          <div class="text-[12px] text-muted leading-relaxed">Your vault is not tied to any account or service. Move it between browsers and devices freely at any time.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6">
+      <div class="flex items-start gap-3">
+        <svg class="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <div class="font-ui font-bold text-[13px] text-amber-400 mb-3">Important — Please Read</div>
+          <ul class="space-y-2 text-[12px] text-muted">
+            <li><span class="text-amber-400 mr-2">→</span>If you forget your master password, there is <strong class="text-txt">no recovery option</strong>. It is never stored anywhere.</li>
+            <li><span class="text-amber-400 mr-2">→</span>If you clear your browser data, your vault will be erased. <strong class="text-txt">Export a backup regularly.</strong></li>
+            <li><span class="text-amber-400 mr-2">→</span>CryptHub has not undergone a formal third-party security audit. Use at your own discretion.</li>
+            <li><span class="text-amber-400 mr-2">→</span>On shared or public computers, always lock your vault and clear browser data after use.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ───────────────────────────────────────────────────── -->
+<section id="faq" class="relative z-10 px-6 py-24 border-t border-border">
+  <div class="max-w-3xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-4">FAQ</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(28px,4vw,48px)] tracking-tight leading-tight mb-16">Common questions.</h2>
+
+    <div class="space-y-px bg-border border border-border rounded-2xl overflow-hidden">
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">What happens if I forget my master password?</div><div class="text-[12px] text-muted leading-relaxed">There is no recovery option. Your master password is never stored anywhere. If you forget it, your vault cannot be decrypted. Store it safely offline.</div></div>
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">Is my data backed up anywhere?</div><div class="text-[12px] text-muted leading-relaxed">No. Your vault lives entirely in your browser's IndexedDB. Use the Export feature regularly to keep a <code class="text-accent2">.crypthub</code> backup on a USB drive or secure external storage.</div></div>
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">Does CryptHub work offline?</div><div class="text-[12px] text-muted leading-relaxed">Yes. After the first load, CryptHub works fully offline. No internet connection is required to access or manage your vault.</div></div>
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">Can I use it on multiple devices?</div><div class="text-[12px] text-muted leading-relaxed">Yes — use the Migrate Vault feature to export your vault and import it on any other device or browser. Each import fully restores your vault.</div></div>
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">What browsers are supported?</div><div class="text-[12px] text-muted leading-relaxed">Any modern browser with the Web Crypto API and IndexedDB — Chrome, Firefox, Safari, Edge, and Opera are fully supported.</div></div>
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">Has CryptHub been audited?</div><div class="text-[12px] text-muted leading-relaxed">No formal third-party audit has been conducted. CryptHub is open source — read the code, audit it yourself, and report issues via GitHub.</div></div>
+      <div class="reveal bg-bg px-7 py-6"><div class="font-ui font-bold text-[14px] mb-2">What happens on import?</div><div class="text-[12px] text-muted leading-relaxed">Import is destructive. It permanently replaces all current vault data with the imported vault. There is no undo. Always export a backup first.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TERMS ─────────────────────────────────────────────────── -->
+<section id="terms" class="relative z-10 px-6 py-24 border-t border-border bg-surface">
+  <div class="max-w-3xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-4">Legal</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(28px,4vw,48px)] tracking-tight leading-tight mb-16">Terms of Use</h2>
+
+    <div class="reveal space-y-8 text-[13px] text-muted leading-relaxed">
+      <div><div class="font-ui font-bold text-txt text-[14px] mb-2">1. Acceptance</div><p>By using CryptHub, you agree to these terms. CryptHub is provided free of charge for personal use under the MIT License.</p></div>
+      <div><div class="font-ui font-bold text-txt text-[14px] mb-2">2. No Warranty</div><p>CryptHub is provided <strong class="text-txt">"as-is"</strong> without any warranty of any kind. This includes warranties of merchantability, fitness for a particular purpose, or non-infringement. Use at your own risk.</p></div>
+      <div><div class="font-ui font-bold text-txt text-[14px] mb-2">3. No Liability for Data Loss</div><p>The developers are not responsible for any loss of data, loss of vault access, or security breaches resulting from forgotten master passwords, browser data deletion, hardware failure, or any other cause. <strong class="text-txt">You are solely responsible for maintaining backups.</strong></p></div>
+      <div><div class="font-ui font-bold text-txt text-[14px] mb-2">4. No Security Audit</div><p>CryptHub has not undergone a formal third-party security audit. While it uses industry-standard primitives (AES-256-GCM, PBKDF2, Web Crypto API), no guarantee of security is made. Review the source code yourself before trusting it with sensitive credentials.</p></div>
+      <div><div class="font-ui font-bold text-txt text-[14px] mb-2">5. Open Source — MIT License</div><p>CryptHub is open source under the <strong class="text-txt">MIT License</strong>. You are free to use, copy, modify, distribute, and sell the software, provided the copyright notice is included in all copies.</p></div>
+      <div><div class="font-ui font-bold text-txt text-[14px] mb-2">6. Changes to Terms</div><p>These terms may be updated at any time. Continued use of CryptHub after changes constitutes acceptance. The most current version is always published on this page.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── LAUNCH CTA ────────────────────────────────────────────── -->
+<section id="launch" class="relative z-10 px-6 py-24 border-t border-border text-center">
+  <div class="max-w-xl mx-auto">
+    <span class="reveal block text-[10px] tracking-[3px] uppercase text-accent mb-6">Get Started</span>
+    <h2 class="reveal font-ui font-extrabold text-[clamp(32px,5vw,56px)] tracking-tight leading-tight mb-5">No install.<br/>No account.<br/>Just open it.</h2>
+    <p class="reveal text-[13px] text-muted leading-relaxed mb-10">Run CryptHub directly in your browser. Works on any modern device. Your data never leaves your machine.</p>
+
+    <div class="reveal flex flex-wrap gap-4 justify-center">
+      <a href="crypthub.html" class="inline-flex items-center gap-3 px-8 py-4 bg-accent text-black font-bold text-[13px] tracking-[1.5px] uppercase rounded-xl hover:opacity-85 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(0,229,160,.2)]">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open CryptHub
+      </a>
+      <a href="https://github.com/srsdesigndev/crypthub" target="_blank" class="inline-flex items-center gap-3 px-8 py-4 border border-border2 text-muted text-[13px] tracking-[1.5px] uppercase rounded-xl hover:border-txt hover:text-txt transition-all hover:-translate-y-0.5">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+        View Source
+      </a>
+    </div>
+
+    <div class="reveal flex flex-wrap gap-2 justify-center mt-8">
+      <span class="px-3 py-1.5 bg-surface border border-border2 rounded-full text-[10px] tracking-[1.5px] uppercase text-muted">No Install</span>
+      <span class="px-3 py-1.5 bg-surface border border-border2 rounded-full text-[10px] tracking-[1.5px] uppercase text-muted">Works Offline</span>
+      <span class="px-3 py-1.5 bg-surface border border-border2 rounded-full text-[10px] tracking-[1.5px] uppercase text-muted">Chrome</span>
+      <span class="px-3 py-1.5 bg-surface border border-border2 rounded-full text-[10px] tracking-[1.5px] uppercase text-muted">Firefox</span>
+      <span class="px-3 py-1.5 bg-surface border border-border2 rounded-full text-[10px] tracking-[1.5px] uppercase text-muted">Safari</span>
+      <span class="px-3 py-1.5 bg-surface border border-border2 rounded-full text-[10px] tracking-[1.5px] uppercase text-muted">Edge</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────────── -->
+<footer class="relative z-10 border-t border-border px-6 md:px-12 py-10">
+  <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <a href="#" class="font-ui font-extrabold text-[16px] text-txt no-underline">Crypt<span class="text-accent">Hub</span></a>
+      <div class="text-[11px] text-muted mt-1">Local-first. Zero cloud. Open source.</div>
+    </div>
+    <div class="flex flex-wrap gap-x-5 gap-y-2">
+      <a href="#features" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">Features</a>
+      <a href="#security" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">Security</a>
+      <a href="#transparency" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">Privacy</a>
+      <a href="#faq" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">FAQ</a>
+      <a href="#terms" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">Terms</a>
+      <a href="https://github.com/srsdesigndev/crypthub" target="_blank" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">GitHub</a>
+      <a href="https://github.com/srsdesigndev/crypthub/issues" target="_blank" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">Issues</a>
+      <a href="https://github.com/srsdesigndev/crypthub/blob/main/LICENSE" target="_blank" class="text-[10px] tracking-[1.5px] uppercase text-muted hover:text-txt transition-colors">License</a>
+    </div>
+    <div class="text-[10px] text-muted2 tracking-[1px]">© 2026 srsdesigndev · MIT</div>
+  </div>
+  <div class="max-w-5xl mx-auto mt-6 pt-6 border-t border-border">
+    <p class="text-[11px] text-muted2 leading-relaxed max-w-2xl">CryptHub is provided as-is for personal use. It uses industry-standard cryptographic primitives but has not undergone a formal third-party audit. Authors are not responsible for data loss or security breaches. Always maintain encrypted backups of your vault.</p>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => nav.classList.toggle('nav-scrolled', window.scrollY > 40));
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 60);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  function toggleMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
+  }
+</script>
 </body>
 </html>
