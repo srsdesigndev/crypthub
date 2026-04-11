@@ -1,4 +1,4 @@
-[test](../assets/cli/cli-open.png)
+![CRYPT CryptHub](../assets/cli/cli-open.png)
 
 # CryptHub CLI
 
