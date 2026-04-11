@@ -1,199 +1,116 @@
-![CryptHub](<assets/crypthub-main.png>)
-
 # CryptHub
 
-> A local-first, encrypted password manager that runs entirely in your browser. Your vault never leaves your device.
+A local-first password manager that runs in your browser.  
+Your vault is stored as an encrypted `.crypthub` file on your filesystem — not in the browser, not on any server.
 
-![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
-![Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)
-![Encryption](https://img.shields.io/badge/encryption-AES--256--GCM-blue?style=flat-square)
-![Storage](https://img.shields.io/badge/storage-local--only-orange?style=flat-square)
+**Live:** [crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)
 
 ---
 
-## What is CryptHub?
+## How it works
 
-CryptHub is an open-source, browser-based password manager that keeps everything local — no cloud, no subscriptions, no accounts, no telemetry. Every password is encrypted with **AES-256-GCM** before it touches your browser's storage. The only way in is your master password.
-
-When you need to move to a new device, CryptHub lets you export your entire vault as a single encrypted `.crypthub` file. Import it on any browser, verify with your master password, and your vault is restored exactly as it was.
-
-🌐 **Live at [crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)** — no install, no setup, works in any modern browser.
-
----
-
-## Features
-
-- **AES-256-GCM encryption** — every password is individually encrypted at rest
-- **Master password authentication** — PBKDF2 key derivation, never stored in plain text
-- **Local IndexedDB storage** — no internet connection required after first load, ever
-- **Password generator** — cryptographically random, configurable length and symbols
-- **Password strength meter** — real-time feedback as you type
-- **Category organisation** — group passwords by Social, Work, Finance, Dev, and more
-- **Full-text search** — filter entries instantly across label, username, and category
-- **Vault migration** — export to a signed `.crypthub` encrypted file, import on any device
-- **One vault, one session** — no merging, no conflicts, clean slate on import
-- **Lock on demand** — session key lives in memory only, cleared on lock or tab close
+1. Open CryptHub in Chrome or Edge
+2. Create a new vault or open an existing `.crypthub` file from your device
+3. Enter your master password — it derives a 256-bit AES-GCM key via PBKDF2
+4. Your vault decrypts into memory. Every change re-encrypts and writes back to the file immediately
+5. Lock at any time — the session key is cleared from memory, the file on disk stays encrypted
 
 ---
 
-## Security Model
+## Security
 
-| Layer | Implementation |
+| Property | Detail |
 |---|---|
-| Password hashing | PBKDF2 (310,000 iterations, random 32-byte salt) |
-| Vault encryption | AES-256-GCM with random IV per entry |
-| Export file | AES-256-GCM, signed with master password via PBKDF2 chain |
+| Encryption | AES-256-GCM |
+| Key derivation | PBKDF2, 310,000 iterations, SHA-256 |
+| Salt | 32 bytes, random, stored in file header |
+| IV | 12 bytes, fresh random value on every write |
+| Auth tag | 16-byte GCM tag — detects any file tampering |
 | Session key | In-memory only, never written to disk |
-| Master password | Never stored — only a salted PBKDF2 hash |
-| Tamper detection | GCM authentication tag on every encrypted value |
+| Master password | Never stored — used only to derive the key |
+| Crypto implementation | Web Crypto API — browser-native, no libraries |
+| External audit | None — source is open for review |
 
-The `.crypthub` export file uses a two-layer key derivation chain:
+**File format** (68-byte header):
 
 ```
-masterHash = PBKDF2(userPassword, masterSalt, 310000)
-exportKey  = PBKDF2(masterHash, exportSalt, 32)
+[0-3]   CRHB  — magic bytes
+[4-7]   0x01  — version
+[8-39]  salt  — 32 bytes
+[40-51] iv    — 12 bytes
+[52-67] tag   — 16 bytes (GCM auth tag)
+[68+]   ciphertext
 ```
 
-This means the export file can only be decrypted by someone who knows the original master password. If the file is tampered with, the GCM auth tag verification will fail and the import is rejected.
-
 ---
 
-## Getting Started
+## Browser support
 
-No installation required. Simply visit:
-
-👉 **[crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)**
-
-Works on any device with a modern browser (Chrome, Firefox, Safari, Edge). Your vault is stored locally in your browser's IndexedDB — encrypted, private, and never transmitted anywhere.
-
-### First Launch
-
-On first launch, CryptHub will ask you to create a master password. This password encrypts your entire vault — **there is no recovery option if you forget it.** Choose something strong and store it somewhere safe.
-
----
-
-## Usage
-
-### Adding a password
-
-Click **New Entry** in the sidebar. Fill in the label (required), username, password, category, and optional notes. Use the **⚡ Generate** button to create a cryptographically random password.
-
-### Copying a password
-
-Click the **Copy** button on any entry card. The password is copied to your clipboard.
-
-### Migrating your vault
-
-Click **Migrate Vault** in the sidebar.
-
-**To export:**
-1. Select the **Export** tab
-2. Click **Export Vault**
-3. Save your `.crypthub` file to a safe location (USB, secure storage, etc.)
-
-**To import:**
-1. Select the **Import** tab
-2. Click **Select .crypthub File** and choose your backup
-3. Enter your master password to verify and decrypt
-4. Your vault is fully restored — the previous vault is wiped
-
-> ⚠️ Import is destructive. It permanently replaces all current data with the imported vault. There is no undo.
-
-### Locking
-
-Click the lock icon in the top right corner at any time. The session key is cleared from memory immediately. Re-enter your master password to unlock.
-
----
-
-## FAQ
-
-**What happens if I forget my master password?**
-There is no recovery option. Your master password is never stored anywhere — not on your device, not on any server. If you forget it, your vault cannot be decrypted. Write it down and keep it somewhere safe.
-
-**Is my data backed up anywhere?**
-No. Your vault lives entirely in your browser's IndexedDB. Use the **Export** feature regularly to keep a backup `.crypthub` file on a USB drive or secure storage.
-
-**Does CryptHub work offline?**
-Yes. After the first load, CryptHub works fully offline. No internet connection is ever required to access your vault.
-
-**Can I use it on multiple devices?**
-Yes — use the **Migrate Vault** feature to export your vault and import it on any other device or browser.
-
-**Is it safe to use in a shared or public computer?**
-Not recommended. Always lock your vault before leaving and clear browser data after use on shared machines.
-
----
-
-## Browser Support
+Requires the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API).
 
 | Browser | Supported |
 |---|---|
-| Chrome / Chromium | ✅ |
-| Firefox | ✅ |
-| Safari | ✅ |
-| Edge | ✅ |
-| Opera | ✅ |
+| Chrome 86+ | ✓ |
+| Edge 86+ | ✓ |
+| Brave, Opera (Chromium) | ✓ |
+| Firefox | ✗ |
+| Safari | ✗ |
+
+Firefox and Safari do not implement this API. There is no IndexedDB fallback.
 
 ---
 
-## Built With
+## Run locally
 
-- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) — AES-256-GCM, PBKDF2, random bytes (built-in to all modern browsers)
-- [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) — local browser storage
-- [JetBrains Mono](https://www.jetbrains.com/lp/mono/) + [Syne](https://fonts.google.com/specimen/Syne) — typography
+No build step required.
 
-No external UI frameworks. No tracking libraries. No analytics.
+```bash
+git clone https://github.com/srsdesigndev/crypthub
+cd crypthub
+# open docs/index.html in Chrome or Edge
+```
+
+---
+
+## Project structure
+
+```
+docs/
+  index.html        landing page
+  crypthub.html     vault app
+  js/
+    main.js         all crypto and app logic
+  favicon.ico
+assets/             icons and images
+```
+
+---
+
+## Limitations
+
+- Chrome and Edge only — Firefox and Safari not supported
+- No master password recovery — if you forget it, the vault cannot be decrypted
+- No cloud sync — move vaults by copying the `.crypthub` file
+- No formal security audit has been conducted
 
 ---
 
 ## Contributing
 
-Contributions are welcome. Please open an issue before submitting a pull request for significant changes so we can discuss the approach.
+Open an issue before submitting a pull request for significant changes.  
+Security-related changes must include a clear explanation of the threat model being addressed.
 
 ```bash
-# Fork the repo, then:
-git checkout -b feature/your-feature-name
-git commit -m "feat: describe your change"
-git push origin feature/your-feature-name
-# Open a pull request
+git checkout -b fix/your-change
+git commit -m "fix: describe the change"
+git push origin fix/your-change
+# open a pull request
 ```
-
-Please keep pull requests focused on a single concern. Security-related changes should include a clear explanation of the threat model being addressed.
 
 ---
 
 ## License
 
-```
-MIT License
+MIT — see [LICENSE](./LICENSE)
 
-Copyright (c) 2026 CryptHub Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-## Disclaimer
-
-CryptHub is provided as-is for personal use. While it uses strong, industry-standard cryptographic primitives, it has not undergone a formal third-party security audit. Use it at your own risk. The authors are not responsible for any data loss or security breaches arising from its use.
-
----
-
-<p align="center">Built with care. No cloud. No compromise.</p>
+© 2026 srsdesigndev
