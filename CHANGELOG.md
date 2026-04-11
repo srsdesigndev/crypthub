@@ -59,3 +59,25 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Browser compatibility check — clear error for unsupported browsers
 - Cross-platform — works on any OS in Chrome or Edge
 - MIT license
+
+
+
+## [1.2.0] — 2026-04-11
+
+### Added
+- CLI tool (`cli/`) — manage vault from terminal, zero dependencies
+- `crypthub init` — create new vault with guided setup
+- `crypthub open` — unlock vault, enter interactive session
+- `crypthub use <path>` — point CLI at any vault file
+- `crypthub status` — show current vault config
+- `crypthub locate` — find all .crypthub files on system
+- Session commands: list, get, show, add, edit, delete, search, dashboard, info, cls, lock
+- ASCII banner with animation on open
+- Spinner on unlock and save operations
+- Password fields masked with asterisks
+- Dashboard — vault stats, category bar chart, recent entries
+- Single vault policy — warns before creating second vault
+- Clipboard support — pbcopy (macOS), clip (Windows), xclip (Linux)
+- cli/README.md — full command reference
+- cli/MIGRATING.md — web app to CLI migration guide
+- cli/TROUBLESHOOTING.md — install and usage troubleshooting
