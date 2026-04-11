@@ -1,3 +1,5 @@
+[test](../assets/cli/cli-open.png)
+
 # CryptHub CLI
 
 Manage your `.crypthub` vault from the terminal.  

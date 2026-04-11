@@ -1,3 +1,5 @@
+[test](../assets/cli/web-landing.png)
+
 # CryptHub
 
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
