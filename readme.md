@@ -1,15 +1,23 @@
 # CryptHub
 
-A local-first password manager that runs in your browser.  
+![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.2.0-blue?style=flat-square)
+![Encryption](https://img.shields.io/badge/encryption-AES--256--GCM-blueviolet?style=flat-square)
+![Node](https://img.shields.io/badge/node-18+-brightgreen?style=flat-square)
+![Browser](https://img.shields.io/badge/browser-Chrome%20%7C%20Edge-orange?style=flat-square)
+![No Cloud](https://img.shields.io/badge/cloud-none-lightgrey?style=flat-square)
+![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-success?style=flat-square)
+
+A local-first password manager that runs in your browser and terminal.  
 Your vault is stored as an encrypted `.crypthub` file on your filesystem — not in the browser, not on any server.
 
-**Live:** [crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)
+**Web app:** [crypthub.srsdevdesign.com](https://crypthub.srsdevdesign.com)
 
 ---
 
 ## How it works
 
-1. Open CryptHub in Chrome or Edge
+1. Open CryptHub in Chrome or Edge — or unlock from the terminal with `crypthub open`
 2. Create a new vault or open an existing `.crypthub` file from your device
 3. Enter your master password — it derives a 256-bit AES-GCM key via PBKDF2
 4. Your vault decrypts into memory. Every change re-encrypts and writes back to the file immediately
@@ -28,7 +36,7 @@ Your vault is stored as an encrypted `.crypthub` file on your filesystem — not
 | Auth tag | 16-byte GCM tag — detects any file tampering |
 | Session key | In-memory only, never written to disk |
 | Master password | Never stored — used only to derive the key |
-| Crypto implementation | Web Crypto API — browser-native, no libraries |
+| Crypto implementation | Web Crypto API (browser) · Node.js crypto (CLI) — no libraries |
 | External audit | None — source is open for review |
 
 **File format** (68-byte header):
@@ -63,6 +71,51 @@ Firefox and Safari do not implement this API. There is no IndexedDB fallback.
 
 ---
 
+## CLI
+
+Manage your vault from the terminal. Same `.crypthub` file — fully interoperable with the web app.
+
+```bash
+# install
+cd cli/
+npm install -g .
+
+# first time
+crypthub init
+
+# every day
+crypthub open
+```
+
+**Commands inside a session:**
+
+```
+list [category]    list all entries
+get  <label>       copy password to clipboard
+show <label>       reveal full entry
+add                add a new entry
+edit <label>       edit an entry
+delete <label>     delete an entry
+search <query>     search entries
+dashboard          vault overview
+cls                clear screen
+lock               lock and exit
+```
+
+**Switching from web app to CLI:**
+
+```bash
+crypthub locate                              # find your vault file
+crypthub use ~/Downloads/my-vault.crypthub   # point CLI at it
+crypthub open                                # unlock with same password
+```
+
+Full CLI documentation: [cli/README.md](./cli/README.md)  
+Migration guide: [cli/MIGRATING.md](./cli/MIGRATING.md)  
+Troubleshooting: [cli/TROUBLESHOOTING.md](./cli/TROUBLESHOOTING.md)
+
+---
+
 ## Run locally
 
 No build step required.
@@ -87,6 +140,12 @@ docs/
   js/
     main.js           all crypto and app logic
   favicon.ico
+cli/
+  crypthub.js         CLI tool — zero dependencies
+  package.json
+  README.md           CLI command reference
+  MIGRATING.md        web app → CLI migration guide
+  TROUBLESHOOTING.md  install and usage troubleshooting
 assets/               icons and images
 .github/
   ISSUE_TEMPLATE/
@@ -104,10 +163,11 @@ DEPLOY.md
 
 ## Limitations
 
-- Chrome and Edge only — Firefox and Safari not supported
+- Web app: Chrome and Edge only — Firefox and Safari not supported
 - No master password recovery — if you forget it, the vault cannot be decrypted
 - No cloud sync — move vaults by copying the `.crypthub` file
 - No formal security audit has been conducted
+- CLI requires Node.js 18+
 
 ---
 
