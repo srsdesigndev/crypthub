@@ -1,4 +1,4 @@
-[test](../assets/cli/web-landing.png)
+![CRYPT CryptHub](./assets/web/web-landing.png)
 
 # CryptHub
 
