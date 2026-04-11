@@ -42,6 +42,9 @@ Your vault is stored as an encrypted `.crypthub` file on your filesystem — not
 [68+]   ciphertext
 ```
 
+For full threat model, known limitations, and vulnerability disclosure:
+see [SECURITY.md](./SECURITY.md)
+
 ---
 
 ## Browser support
@@ -70,18 +73,31 @@ cd crypthub
 # open docs/index.html in Chrome or Edge
 ```
 
+For self-hosting on GitHub Pages, Netlify, or Cloudflare Pages:
+see [DEPLOY.md](./DEPLOY.md)
+
 ---
 
 ## Project structure
 
 ```
 docs/
-  index.html        landing page
-  crypthub.html     vault app
+  index.html          landing page
+  crypthub.html       vault app
   js/
-    main.js         all crypto and app logic
+    main.js           all crypto and app logic
   favicon.ico
-assets/             icons and images
+assets/               icons and images
+.github/
+  ISSUE_TEMPLATE/
+    bug_report.md
+    feature_request.md
+  PULL_REQUEST_TEMPLATE.md
+SECURITY.md
+CONTRIBUTING.md
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+DEPLOY.md
 ```
 
 ---
@@ -106,6 +122,14 @@ git commit -m "fix: describe the change"
 git push origin fix/your-change
 # open a pull request
 ```
+
+Full contribution guidelines: [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
